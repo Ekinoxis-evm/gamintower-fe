@@ -19,11 +19,6 @@ export type ChainId = (typeof CHAIN_IDS)[keyof typeof CHAIN_IDS];
 export const DEFAULT_CHAIN_ID = Number(process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID) || CHAIN_IDS.BASE;
 
 // =============================================================================
-// ADMIN CONFIGURATION
-// =============================================================================
-export const ADMIN_ADDRESS = process.env.NEXT_PUBLIC_ADMIN_ADDRESS!;
-
-// =============================================================================
 // EXPLORER URLS
 // =============================================================================
 export const EXPLORER_URLS: Record<ChainId, string> = {

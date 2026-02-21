@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
+import React, { useState, useEffect } from 'react';
 import { parseUnits } from 'viem';
 import { useAcceptedTokens } from '../../hooks/challenges/useAcceptedTokens';
 import { useCreateChallenge } from '../../hooks/challenges/useCreateChallenge';
 import { getTokenMetaByAddress } from '../../utils/tokenUtils';
+import TokenPicker from '../shared/TokenPicker';
 
 interface CreateChallengeModalProps {
   userAddress: `0x${string}`;
@@ -13,39 +13,32 @@ interface CreateChallengeModalProps {
 }
 
 const CreateChallengeModal: React.FC<CreateChallengeModalProps> = ({
-  userAddress: _userAddress,
+  userAddress,
   chainId,
   onClose,
   onSuccess,
 }) => {
-  const [selectedTokenIdx, setSelectedTokenIdx] = useState(0);
+  const [selectedToken, setSelectedToken] = useState('');
   const [stakeAmount, setStakeAmount] = useState('');
-  const [durationHours, setDurationHours] = useState('24');
+  const [durationSeconds, setDurationSeconds] = useState('300');
   const [metadataURI, setMetadataURI] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const { data: acceptedTokens = [], isLoading } = useAcceptedTokens(chainId);
   const { createChallenge } = useCreateChallenge();
 
-  // Close dropdown when clicking outside
+  // Auto-select first token when the list loads
   useEffect(() => {
-    const handleOutsideClick = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false);
-      }
-    };
-    if (dropdownOpen) document.addEventListener('mousedown', handleOutsideClick);
-    return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, [dropdownOpen]);
+    if (acceptedTokens.length > 0 && !selectedToken) {
+      setSelectedToken(acceptedTokens[0]);
+    }
+  }, [acceptedTokens, selectedToken]);
 
-  const selectedToken = acceptedTokens[selectedTokenIdx];
   const selectedMeta = selectedToken ? getTokenMetaByAddress(selectedToken) : null;
 
   const handleCreate = async () => {
-    if (!stakeAmount || !durationHours || acceptedTokens.length === 0 || !selectedMeta) {
+    if (!stakeAmount || !durationSeconds || !selectedToken || !selectedMeta) {
       setError('Please fill all required fields');
       return;
     }
@@ -53,11 +46,12 @@ const CreateChallengeModal: React.FC<CreateChallengeModalProps> = ({
     setError(null);
     try {
       await createChallenge({
-        tokenAddress: acceptedTokens[selectedTokenIdx],
+        tokenAddress: selectedToken as `0x${string}`,
         stakeAmount: parseUnits(stakeAmount, selectedMeta.decimals),
-        duration: BigInt(Number(durationHours) * 3600),
+        duration: BigInt(Number(durationSeconds)),
         metadataURI,
         chainId,
+        userAddress,
       });
       onSuccess();
       onClose();
@@ -80,137 +74,66 @@ const CreateChallengeModal: React.FC<CreateChallengeModalProps> = ({
           </button>
         </div>
 
-        {isLoading ? (
-          <p className="text-gray-400 text-sm">Loading tokens...</p>
-        ) : acceptedTokens.length === 0 ? (
-          <p className="text-yellow-400 text-sm">No accepted tokens configured.</p>
-        ) : (
-          <div className="space-y-4">
-            {/* Token picker */}
-            <div>
-              <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">Token</label>
-              <div className="relative" ref={dropdownRef}>
-                {/* Trigger */}
-                <button
-                  type="button"
-                  onClick={() => setDropdownOpen((o) => !o)}
-                  className="w-full flex items-center gap-3 bg-slate-800 border border-slate-600 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-cyan-500 hover:border-slate-500 transition-colors"
-                >
-                  {selectedMeta && (
-                    <Image
-                      src={selectedMeta.logoUrl}
-                      alt={selectedMeta.symbol}
-                      width={24}
-                      height={24}
-                      className="rounded-full flex-shrink-0"
-                      unoptimized
-                    />
-                  )}
-                  <span className="font-semibold">{selectedMeta?.symbol ?? '—'}</span>
-                  <span className="text-gray-400 text-xs">{selectedMeta?.name}</span>
-                  <svg
-                    className={`w-4 h-4 text-gray-400 ml-auto transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                {/* Options */}
-                {dropdownOpen && (
-                  <div className="absolute z-10 mt-1 w-full bg-slate-800 border border-slate-600 rounded-lg shadow-xl overflow-hidden">
-                    {acceptedTokens.map((token, idx) => {
-                      const meta = getTokenMetaByAddress(token);
-                      const isSelected = idx === selectedTokenIdx;
-                      return (
-                        <button
-                          key={token}
-                          type="button"
-                          onClick={() => {
-                            setSelectedTokenIdx(idx);
-                            setDropdownOpen(false);
-                          }}
-                          className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors text-left
-                            ${isSelected
-                              ? 'bg-cyan-500/10 text-cyan-400'
-                              : 'text-white hover:bg-slate-700'
-                            }`}
-                        >
-                          <Image
-                            src={meta.logoUrl}
-                            alt={meta.symbol}
-                            width={24}
-                            height={24}
-                            className="rounded-full flex-shrink-0"
-                            unoptimized
-                          />
-                          <span className="font-semibold">{meta.symbol}</span>
-                          <span className="text-gray-400 text-xs">{meta.name}</span>
-                          {isSelected && (
-                            <svg className="w-4 h-4 ml-auto text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">Stake Amount (tokens)</label>
-              <input
-                type="number"
-                value={stakeAmount}
-                onChange={(e) => setStakeAmount(e.target.value)}
-                placeholder="10"
-                min="0"
-                className="w-full bg-slate-800 border border-slate-600 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">Duration (hours)</label>
-              <input
-                type="number"
-                value={durationHours}
-                onChange={(e) => setDurationHours(e.target.value)}
-                placeholder="24"
-                min="1"
-                className="w-full bg-slate-800 border border-slate-600 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">Metadata URI (optional)</label>
-              <input
-                type="text"
-                value={metadataURI}
-                onChange={(e) => setMetadataURI(e.target.value)}
-                placeholder="ipfs://..."
-                className="w-full bg-slate-800 border border-slate-600 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500"
-              />
-            </div>
-
-            {error && (
-              <p className="text-red-400 text-xs bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
-                {error}
-              </p>
-            )}
-
-            <button
-              onClick={handleCreate}
-              disabled={isCreating}
-              className="w-full py-3 bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 text-black font-bold rounded-xl transition-all"
-            >
-              {isCreating ? 'Creating...' : 'Create Challenge'}
-            </button>
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">Token</label>
+            <TokenPicker
+              tokens={acceptedTokens}
+              value={selectedToken}
+              onChange={setSelectedToken}
+              isLoading={isLoading}
+            />
           </div>
-        )}
+
+          <div>
+            <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">Stake Amount (tokens)</label>
+            <input
+              type="number"
+              value={stakeAmount}
+              onChange={(e) => setStakeAmount(e.target.value)}
+              placeholder="10"
+              min="0"
+              className="w-full bg-slate-800 border border-slate-600 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">Duration (seconds)</label>
+            <input
+              type="number"
+              value={durationSeconds}
+              onChange={(e) => setDurationSeconds(e.target.value)}
+              placeholder="300"
+              min="1"
+              className="w-full bg-slate-800 border border-slate-600 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">Metadata URI (optional)</label>
+            <input
+              type="text"
+              value={metadataURI}
+              onChange={(e) => setMetadataURI(e.target.value)}
+              placeholder="ipfs://..."
+              className="w-full bg-slate-800 border border-slate-600 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500"
+            />
+          </div>
+
+          {error && (
+            <p className="text-red-400 text-xs bg-red-400/10 border border-red-400/30 rounded-lg px-3 py-2">
+              {error}
+            </p>
+          )}
+
+          <button
+            onClick={handleCreate}
+            disabled={isCreating}
+            className="w-full py-3 bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 text-black font-bold rounded-xl transition-all"
+          >
+            {isCreating ? 'Creating...' : 'Create Challenge'}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -5,12 +5,13 @@ import Loading from '../components/shared/Loading';
 import Navigation from '../components/Navigation';
 import ChallengeList from '../components/challenges/ChallengeList';
 import ChallengeAdminPanel from '../components/challenges/ChallengeAdminPanel';
-import { ADMIN_ADDRESS } from '../config/constants';
+import { useIsAdmin } from '../hooks/useIsAdmin';
 
 export default function ChallengesPage() {
   const router = useRouter();
   const { ready, authenticated, user } = usePrivy();
   const [chainId] = useState(8453);
+  const { data: isAdmin } = useIsAdmin(chainId);
 
   React.useEffect(() => {
     if (ready && !authenticated) {
@@ -22,11 +23,6 @@ export default function ChallengesPage() {
   if (!authenticated) return <Loading fullScreen text="Redirecting..." />;
 
   const userAddress = user?.wallet?.address;
-  const isAdmin = Boolean(
-    userAddress &&
-    ADMIN_ADDRESS &&
-    userAddress.toLowerCase() === ADMIN_ADDRESS.toLowerCase()
-  );
 
   return (
     <div className="min-h-screen bg-gray-950">

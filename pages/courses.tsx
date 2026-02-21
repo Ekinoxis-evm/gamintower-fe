@@ -5,12 +5,13 @@ import Loading from '../components/shared/Loading';
 import Navigation from '../components/Navigation';
 import CourseList from '../components/courses/CourseList';
 import CourseAdminPanel from '../components/courses/CourseAdminPanel';
-import { ADMIN_ADDRESS } from '../config/constants';
+import { useIsAdmin } from '../hooks/useIsAdmin';
 
 export default function CoursesPage() {
   const router = useRouter();
-  const { ready, authenticated, user } = usePrivy();
+  const { ready, authenticated } = usePrivy();
   const [chainId] = useState(8453);
+  const { data: isAdmin } = useIsAdmin(chainId);
 
   React.useEffect(() => {
     if (ready && !authenticated) {
@@ -20,13 +21,6 @@ export default function CoursesPage() {
 
   if (!ready) return <Loading fullScreen text="Loading..." />;
   if (!authenticated) return <Loading fullScreen text="Redirecting..." />;
-
-  const userAddress = user?.wallet?.address;
-  const isAdmin = Boolean(
-    userAddress &&
-    ADMIN_ADDRESS &&
-    userAddress.toLowerCase() === ADMIN_ADDRESS.toLowerCase()
-  );
 
   return (
     <div className="min-h-screen bg-gray-950">

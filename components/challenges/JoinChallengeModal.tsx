@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { formatUnits } from 'viem';
 import { VaultInfo } from '../../types/index';
 import { useJoinChallenge } from '../../hooks/challenges/useJoinChallenge';
+import { getTokenMetaByAddress } from '../../utils/tokenUtils';
 
 interface JoinChallengeModalProps {
   vault: VaultInfo;
@@ -22,20 +23,19 @@ const JoinChallengeModal: React.FC<JoinChallengeModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const { joinChallenge } = useJoinChallenge();
 
-  // We need the token address from vault — it's encoded in the vault's asset field
-  // For now we show what we know and the user confirms
+  const tokenMeta = getTokenMetaByAddress(vault.token);
+  const formattedStake = `${formatUnits(vault.stakeAmount, tokenMeta.decimals)} ${tokenMeta.symbol}`;
+
   const handleJoin = async () => {
     setIsJoining(true);
     setError(null);
     try {
-      // Note: vault.stakeAmount uses 6 decimals (token-dependent)
-      // We use address(0) as placeholder; real token address comes from vault's asset() call
-      // For simplicity, user must have already approved or we pass stakeAmount directly
       await joinChallenge({
         vaultAddress: vault.address,
-        tokenAddress: vault.player1, // Placeholder — real impl would read asset() from vault
+        tokenAddress: vault.token,
         stakeAmount: vault.stakeAmount,
         receiver: userAddress,
+        userAddress,
         chainId,
       });
       onSuccess();
@@ -62,7 +62,7 @@ const JoinChallengeModal: React.FC<JoinChallengeModalProps> = ({
         <div className="bg-slate-800 rounded-xl p-4 mb-4 space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-400">Stake required</span>
-            <span className="text-white font-semibold">{formatUnits(vault.stakeAmount, 6)} tokens</span>
+            <span className="text-white font-semibold">{formattedStake}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">Opponent</span>
@@ -73,7 +73,7 @@ const JoinChallengeModal: React.FC<JoinChallengeModalProps> = ({
         </div>
 
         <p className="text-xs text-gray-500 mb-4">
-          By joining, you stake {formatUnits(vault.stakeAmount, 6)} tokens. The winner takes all.
+          By joining, you stake {formattedStake}. The winner takes all.
         </p>
 
         {error && (

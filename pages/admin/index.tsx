@@ -6,15 +6,16 @@ import Navigation from '../../components/Navigation';
 import IdentityAdminPanel from '../../components/identity/IdentityAdminPanel';
 import ChallengeAdminPanel from '../../components/challenges/ChallengeAdminPanel';
 import CourseAdminPanel from '../../components/courses/CourseAdminPanel';
-import { ADMIN_ADDRESS } from '../../config/constants';
+import { useIsAdmin } from '../../hooks/useIsAdmin';
 
 type AdminTab = 'identity' | 'challenges' | 'courses';
 
 export default function AdminPage() {
   const router = useRouter();
-  const { ready, authenticated, user } = usePrivy();
+  const { ready, authenticated } = usePrivy();
   const [chainId] = useState(8453);
   const [activeTab, setActiveTab] = useState<AdminTab>('identity');
+  const { data: isAdmin, isLoading: isAdminLoading } = useIsAdmin(chainId);
 
   React.useEffect(() => {
     if (ready && !authenticated) {
@@ -24,13 +25,7 @@ export default function AdminPage() {
 
   if (!ready) return <Loading fullScreen text="Loading..." />;
   if (!authenticated) return <Loading fullScreen text="Redirecting..." />;
-
-  const userAddress = user?.wallet?.address;
-  const isAdmin = Boolean(
-    userAddress &&
-    ADMIN_ADDRESS &&
-    userAddress.toLowerCase() === ADMIN_ADDRESS.toLowerCase()
-  );
+  if (isAdminLoading) return <Loading fullScreen text="Verifying access..." />;
 
   if (!isAdmin) {
     return (

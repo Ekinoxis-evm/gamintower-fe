@@ -65,5 +65,19 @@ export function useIdentityAdminActions() {
     await sendTransaction({ to: collectionAddress, data, chainId }, { sponsor: true });
   };
 
-  return { suspend, unsuspend, setTokenConfig, setTreasury };
+  const disableToken = async (
+    collectionAddress: `0x${string}`,
+    token: `0x${string}`,
+    chainId: number,
+  ) => {
+    const data = encodeFunctionData({
+      abi: IdentityNFT_ABI,
+      functionName: 'disableToken',
+      args: [token],
+    });
+    await sendTransaction({ to: collectionAddress, data, chainId }, { sponsor: true });
+    await queryClient.invalidateQueries({ queryKey: ['identity-token-configs'] });
+  };
+
+  return { suspend, unsuspend, setTokenConfig, setTreasury, disableToken };
 }

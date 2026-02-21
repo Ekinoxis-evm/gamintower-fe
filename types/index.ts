@@ -29,6 +29,7 @@ export type ChallengeState = 0 | 1 | 2; // OPEN, ACTIVE, RESOLVED
 
 export interface VaultInfo {
   address: `0x${string}`;
+  token: `0x${string}`;
   player1: `0x${string}`;
   player2: `0x${string}`;
   stakeAmount: bigint;

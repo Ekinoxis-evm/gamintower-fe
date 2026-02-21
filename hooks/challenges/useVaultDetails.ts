@@ -29,7 +29,7 @@ export function useVaultDetails(
         transport: http(getChainRpc(chainId)),
       });
 
-      const fields = ['state', 'player1', 'player2', 'stakeAmount', 'endTime', 'winner', 'metadataURI'] as const;
+      const fields = ['asset', 'state', 'player1', 'player2', 'stakeAmount', 'endTime', 'winner', 'metadataURI'] as const;
       const calls = vaultAddresses.flatMap((address) =>
         fields.map((field) => ({
           address,
@@ -45,16 +45,18 @@ export function useVaultDetails(
         const base = i * fields.length;
         const get = (j: number) => results[base + j];
 
-        const stateResult = get(0);
-        const player1Result = get(1);
-        const player2Result = get(2);
-        const stakeResult = get(3);
-        const endTimeResult = get(4);
-        const winnerResult = get(5);
-        const metaResult = get(6);
+        const assetResult  = get(0);
+        const stateResult  = get(1);
+        const player1Result = get(2);
+        const player2Result = get(3);
+        const stakeResult  = get(4);
+        const endTimeResult = get(5);
+        const winnerResult = get(6);
+        const metaResult   = get(7);
 
         return {
           address,
+          token: (assetResult.status === 'success' ? assetResult.result : ZERO_ADDRESS) as `0x${string}`,
           state: (stateResult.status === 'success' ? Number(stateResult.result as bigint) : 0) as ChallengeState,
           player1: (player1Result.status === 'success' ? player1Result.result : ZERO_ADDRESS) as `0x${string}`,
           player2: (player2Result.status === 'success' ? player2Result.result : ZERO_ADDRESS) as `0x${string}`,

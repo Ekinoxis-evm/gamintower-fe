@@ -3,6 +3,7 @@ import { formatUnits } from 'viem';
 import { useIdentityTokenConfigs } from '../../hooks/identity/useIdentityTokenConfigs';
 import { useIdentityRenew } from '../../hooks/identity/useIdentityRenew';
 import type { MintPeriod } from '../../hooks/identity/useIdentityMint';
+import { getTokenMetaByAddress } from '../../utils/tokenUtils';
 
 interface IdentityRenewModalProps {
   collectionAddress: `0x${string}`;
@@ -29,6 +30,8 @@ const IdentityRenewModal: React.FC<IdentityRenewModalProps> = ({
 
   const enabledConfigs = tokenConfigs.filter((c) => c.enabled);
   const selectedConfig = enabledConfigs[selectedTokenIdx];
+  const tokenMeta = selectedConfig ? getTokenMetaByAddress(selectedConfig.token) : null;
+
   const price = selectedConfig
     ? period === 0 ? selectedConfig.monthlyPrice : selectedConfig.yearlyPrice
     : BigInt(0);
@@ -68,13 +71,13 @@ const IdentityRenewModal: React.FC<IdentityRenewModalProps> = ({
         </div>
 
         {isLoading ? (
-          <p className="text-gray-400 text-sm">Loading payment options...</p>
+          <p className="text-gray-400 text-sm">Loading payment options…</p>
         ) : enabledConfigs.length === 0 ? (
-          <p className="text-yellow-400 text-sm">No payment tokens configured.</p>
+          <p className="text-yellow-400 text-sm">No payment tokens configured for this collection.</p>
         ) : (
           <div className="space-y-4">
             <div>
-              <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">Period</label>
+              <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">Subscription Period</label>
               <div className="grid grid-cols-2 gap-2">
                 {(['Monthly', 'Yearly'] as const).map((label, idx) => (
                   <button
@@ -99,19 +102,24 @@ const IdentityRenewModal: React.FC<IdentityRenewModalProps> = ({
                 onChange={(e) => setSelectedTokenIdx(Number(e.target.value))}
                 className="w-full bg-slate-800 border border-slate-600 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500"
               >
-                {enabledConfigs.map((cfg, idx) => (
-                  <option key={cfg.token} value={idx}>
-                    {cfg.token.slice(0, 6)}...{cfg.token.slice(-4)}
-                  </option>
-                ))}
+                {enabledConfigs.map((cfg, idx) => {
+                  const meta = getTokenMetaByAddress(cfg.token);
+                  return (
+                    <option key={cfg.token} value={idx}>
+                      {meta.symbol} — {meta.name}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
-            {selectedConfig && (
+            {selectedConfig && tokenMeta && (
               <div className="bg-slate-800 rounded-lg p-3">
                 <div className="flex justify-between text-sm font-semibold">
-                  <span className="text-gray-300">Total</span>
-                  <span className="text-cyan-400">{formatUnits(price, 6)} tokens</span>
+                  <span className="text-gray-300">Total ({period === 0 ? 'monthly' : 'yearly'})</span>
+                  <span className="text-cyan-400">
+                    {formatUnits(price, tokenMeta.decimals)} {tokenMeta.symbol}
+                  </span>
                 </div>
               </div>
             )}
@@ -127,7 +135,7 @@ const IdentityRenewModal: React.FC<IdentityRenewModalProps> = ({
               disabled={isRenewing || !selectedConfig}
               className="w-full py-3 bg-purple-500 hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all"
             >
-              {isRenewing ? 'Processing...' : 'Renew Identity'}
+              {isRenewing ? 'Processing…' : 'Renew Identity'}
             </button>
           </div>
         )}

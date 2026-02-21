@@ -7,3 +7,7 @@ export type { MintPeriod } from './useIdentityMint';
 export { useIdentityRenew } from './useIdentityRenew';
 export { useDeployCollection } from './useDeployCollection';
 export { useIdentityAdminActions } from './useIdentityAdminActions';
+export { useCollectionInfo } from './useCollectionInfo';
+export type { CollectionInfo } from './useCollectionInfo';
+export { useIdentityMetadata } from './useIdentityMetadata';
+export type { NFTMetadata, NFTAttribute } from './useIdentityMetadata';

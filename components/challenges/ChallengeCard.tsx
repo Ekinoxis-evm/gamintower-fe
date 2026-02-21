@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { formatUnits } from 'viem';
 import { VaultInfo } from '../../types/index';
+import { getTokenMetaByAddress } from '../../utils/tokenUtils';
 
 const STATE_LABELS: Record<number, string> = {
   0: 'OPEN',
@@ -35,6 +36,7 @@ interface ChallengeCardProps {
 
 const ChallengeCard: React.FC<ChallengeCardProps> = ({ vault, userAddress, onJoin, onSubmit }) => {
   const [expanded, setExpanded] = useState(false);
+  const tokenMeta = getTokenMetaByAddress(vault.token);
   const stateLabel = STATE_LABELS[vault.state] ?? 'UNKNOWN';
   const stateColor = STATE_COLORS[vault.state] ?? STATE_COLORS[2];
 
@@ -61,7 +63,9 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({ vault, userAddress, onJoi
       <div className="space-y-1.5 text-sm mb-3">
         <div className="flex justify-between">
           <span className="text-gray-400">Stake</span>
-          <span className="text-white font-semibold">{formatUnits(vault.stakeAmount, 6)} tokens</span>
+          <span className="text-white font-semibold">
+            {formatUnits(vault.stakeAmount, tokenMeta.decimals)} {tokenMeta.symbol}
+          </span>
         </div>
         {vault.state === 1 && (
           <div className="flex justify-between">

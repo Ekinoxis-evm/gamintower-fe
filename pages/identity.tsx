@@ -7,7 +7,7 @@ import IdentityStatus from '../components/identity/IdentityStatus';
 import IdentityMintModal from '../components/identity/IdentityMintModal';
 import IdentityRenewModal from '../components/identity/IdentityRenewModal';
 import IdentityAdminPanel from '../components/identity/IdentityAdminPanel';
-import { ADMIN_ADDRESS } from '../config/constants';
+import { useIsAdmin } from '../hooks/useIsAdmin';
 
 interface MintTarget {
   collectionAddress: `0x${string}`;
@@ -24,6 +24,7 @@ export default function IdentityPage() {
   const [chainId] = useState(8453);
   const [mintTarget, setMintTarget] = useState<MintTarget | null>(null);
   const [renewTarget, setRenewTarget] = useState<RenewTarget | null>(null);
+  const { data: isAdmin } = useIsAdmin(chainId);
 
   React.useEffect(() => {
     if (ready && !authenticated) {
@@ -35,11 +36,6 @@ export default function IdentityPage() {
   if (!authenticated) return <Loading fullScreen text="Redirecting..." />;
 
   const userAddress = user?.wallet?.address;
-  const isAdmin = Boolean(
-    userAddress &&
-    ADMIN_ADDRESS &&
-    userAddress.toLowerCase() === ADMIN_ADDRESS.toLowerCase()
-  );
 
   return (
     <div className="min-h-screen bg-gray-950">
