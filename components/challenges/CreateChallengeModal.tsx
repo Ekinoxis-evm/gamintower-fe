@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { parseUnits } from 'viem';
 import { useAcceptedTokens } from '../../hooks/challenges/useAcceptedTokens';
-import { useCreateChallenge } from '../../hooks/challenges/useCreateChallenge';
+import { useCreateChallenge, type CreateStep } from '../../hooks/challenges/useCreateChallenge';
 import { getTokenMetaByAddress } from '../../utils/tokenUtils';
 import TokenPicker from '../shared/TokenPicker';
+
+const STEP_LABELS: Record<CreateStep, string> = {
+  creating: 'Creating vault... (1/3)',
+  approving: 'Approving tokens... (2/3)',
+  depositing: 'Depositing stake... (3/3)',
+};
 
 interface CreateChallengeModalProps {
   userAddress: `0x${string}`;
@@ -23,6 +29,7 @@ const CreateChallengeModal: React.FC<CreateChallengeModalProps> = ({
   const [durationSeconds, setDurationSeconds] = useState('300');
   const [metadataURI, setMetadataURI] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [stepLabel, setStepLabel] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
   const { data: acceptedTokens = [], isLoading } = useAcceptedTokens(chainId);
@@ -43,22 +50,27 @@ const CreateChallengeModal: React.FC<CreateChallengeModalProps> = ({
       return;
     }
     setIsCreating(true);
+    setStepLabel('');
     setError(null);
     try {
-      await createChallenge({
-        tokenAddress: selectedToken as `0x${string}`,
-        stakeAmount: parseUnits(stakeAmount, selectedMeta.decimals),
-        duration: BigInt(Number(durationSeconds)),
-        metadataURI,
-        chainId,
-        userAddress,
-      });
+      await createChallenge(
+        {
+          tokenAddress: selectedToken as `0x${string}`,
+          stakeAmount: parseUnits(stakeAmount, selectedMeta.decimals),
+          duration: BigInt(Number(durationSeconds)),
+          metadataURI,
+          chainId,
+          userAddress,
+        },
+        (step) => setStepLabel(STEP_LABELS[step]),
+      );
       onSuccess();
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Transaction failed');
     } finally {
       setIsCreating(false);
+      setStepLabel('');
     }
   };
 
@@ -131,7 +143,7 @@ const CreateChallengeModal: React.FC<CreateChallengeModalProps> = ({
             disabled={isCreating}
             className="w-full py-3 bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 text-black font-bold rounded-xl transition-all"
           >
-            {isCreating ? 'Creating...' : 'Create Challenge'}
+            {stepLabel || (isCreating ? 'Creating...' : 'Create Challenge')}
           </button>
         </div>
       </div>

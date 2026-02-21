@@ -144,6 +144,9 @@ export function useJoinChallenge() {
     const vaultStake   = vaultStakeResult.status === 'success' ? (vaultStakeResult.result as bigint)  : BigInt(0);
     const userBalance  = balanceResult.status  === 'success' ? (balanceResult.result  as bigint)      : BigInt(0);
 
+    if (tokenAddress === ZERO_ADDRESS as `0x${string}`) {
+      throw new Error('Token address not loaded — please refresh and try again.');
+    }
     if (vaultState !== 0) {
       throw new Error('This challenge is no longer open for joining.');
     }
@@ -153,36 +156,57 @@ export function useJoinChallenge() {
     if (player1.toLowerCase() === userAddress.toLowerCase()) {
       throw new Error('You cannot join your own challenge.');
     }
+    if (vaultStake === BigInt(0)) {
+      throw new Error('Stake amount is zero — please refresh the page and try again.');
+    }
     if (vaultStake !== stakeAmount) {
       throw new Error('Stake amount mismatch — please refresh and try again.');
     }
-    if (userBalance < stakeAmount) {
+    if (userBalance < vaultStake) {
       throw new Error(
-        `Insufficient token balance. You need ${stakeAmount} but only have ${userBalance}.`,
+        `Insufficient token balance. You need ${vaultStake} but only have ${userBalance}.`,
       );
     }
 
-    // ── 1. Approve ERC20 spend on the vault ───────────────────────────────────
+    // Use vaultStake (fresh from chain) as the authoritative amount for both txs
     const approveData = encodeFunctionData({
       abi: ERC20_ABI,
       functionName: 'approve',
-      args: [vaultAddress, stakeAmount],
+      args: [vaultAddress, vaultStake],
     });
-    await sendTransaction(
+    const { hash: approveHash } = await sendTransaction(
       { to: tokenAddress, data: approveData, chainId },
       { sponsor: true },
     );
+    const approveReceipt = await client.waitForTransactionReceipt({ hash: approveHash });
+    if (approveReceipt.status === 'reverted') {
+      throw new Error('Token approval failed on-chain. Please try again.');
+    }
 
     // ── 2. Deposit to join as player2 ─────────────────────────────────────────
     const depositData = encodeFunctionData({
       abi: ChallengeVault_ABI as Abi,
       functionName: 'deposit',
-      args: [stakeAmount, receiver],
+      args: [vaultStake, receiver],
     });
-    await sendTransaction(
+    const { hash: depositHash } = await sendTransaction(
       { to: vaultAddress, data: depositData, chainId },
       { sponsor: true },
     );
+    const depositReceipt = await client.waitForTransactionReceipt({ hash: depositHash });
+    if (depositReceipt.status === 'reverted') {
+      throw new Error('Deposit reverted on-chain. Your approval is set — try joining again.');
+    }
+
+    // ── 3. Verify the join actually completed ────────────────────────────────
+    const player2After = await client.readContract({
+      address: vaultAddress,
+      abi: vaultAbi,
+      functionName: 'player2',
+    }) as `0x${string}`;
+    if (player2After.toLowerCase() !== userAddress.toLowerCase()) {
+      throw new Error('Join did not complete — player2 was not set. Please try again.');
+    }
 
     await queryClient.invalidateQueries({ queryKey: ['vault-details'] });
   };

@@ -29,7 +29,7 @@ export function useVaultDetails(
         transport: http(getChainRpc(chainId)),
       });
 
-      const fields = ['asset', 'state', 'player1', 'player2', 'stakeAmount', 'endTime', 'winner', 'metadataURI'] as const;
+      const fields = ['asset', 'resolver', 'state', 'player1', 'player2', 'stakeAmount', 'endTime', 'winner', 'metadataURI', 'challengeDuration'] as const;
       const calls = vaultAddresses.flatMap((address) =>
         fields.map((field) => ({
           address,
@@ -45,30 +45,36 @@ export function useVaultDetails(
         const base = i * fields.length;
         const get = (j: number) => results[base + j];
 
-        const assetResult  = get(0);
-        const stateResult  = get(1);
-        const player1Result = get(2);
-        const player2Result = get(3);
-        const stakeResult  = get(4);
-        const endTimeResult = get(5);
-        const winnerResult = get(6);
-        const metaResult   = get(7);
+        const assetResult    = get(0);
+        const resolverResult = get(1);
+        const stateResult    = get(2);
+        const player1Result  = get(3);
+        const player2Result  = get(4);
+        const stakeResult    = get(5);
+        const endTimeResult  = get(6);
+        const winnerResult   = get(7);
+        const metaResult     = get(8);
+        const durationResult = get(9);
 
         return {
           address,
-          token: (assetResult.status === 'success' ? assetResult.result : ZERO_ADDRESS) as `0x${string}`,
+          token:    (assetResult.status    === 'success' ? assetResult.result    : ZERO_ADDRESS) as `0x${string}`,
+          resolver: (resolverResult.status === 'success' ? resolverResult.result : ZERO_ADDRESS) as `0x${string}`,
           state: (stateResult.status === 'success' ? Number(stateResult.result as bigint) : 0) as ChallengeState,
           player1: (player1Result.status === 'success' ? player1Result.result : ZERO_ADDRESS) as `0x${string}`,
           player2: (player2Result.status === 'success' ? player2Result.result : ZERO_ADDRESS) as `0x${string}`,
           stakeAmount: stakeResult.status === 'success' ? (stakeResult.result as bigint) : BigInt(0),
           endTime: endTimeResult.status === 'success' ? (endTimeResult.result as bigint) : BigInt(0),
+          challengeDuration: durationResult.status === 'success' ? (durationResult.result as bigint) : BigInt(0),
           winner: (winnerResult.status === 'success' ? winnerResult.result : ZERO_ADDRESS) as `0x${string}`,
           metadataURI: metaResult.status === 'success' ? (metaResult.result as string) : '',
         };
       });
     },
     enabled: vaultAddresses.length > 0,
-    staleTime: 1000 * 15,
+    staleTime: 1000 * 5,
+    refetchInterval: 1000 * 10,
+    refetchOnWindowFocus: true,
     retry: 2,
   });
 }

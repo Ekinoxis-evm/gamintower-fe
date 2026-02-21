@@ -53,6 +53,7 @@ const ChallengeList: React.FC<ChallengeListProps> = ({ userAddress, chainId }) =
               key={vault.address}
               vault={vault}
               userAddress={userAddress}
+              chainId={chainId}
               onJoin={setJoinVault}
               onSubmit={setSubmitVault}
             />

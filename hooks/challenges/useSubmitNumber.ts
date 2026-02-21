@@ -28,6 +28,7 @@ export function useSubmitNumber() {
     );
 
     await queryClient.invalidateQueries({ queryKey: ['vault-details'] });
+    await queryClient.invalidateQueries({ queryKey: ['vault-submissions'] });
   };
 
   return { submitNumber };

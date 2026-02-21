@@ -5,3 +5,6 @@ export { useCreateChallenge } from './useCreateChallenge';
 export { useJoinChallenge } from './useJoinChallenge';
 export { useSubmitNumber } from './useSubmitNumber';
 export { useVaultAdminActions } from './useVaultAdminActions';
+export { useVaultSubmissions } from './useVaultSubmissions';
+export { useResolveDispute } from './useResolveDispute';
+export { useClaimWinnings } from './useClaimWinnings';

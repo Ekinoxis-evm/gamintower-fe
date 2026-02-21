@@ -26,7 +26,9 @@ export function useAllVaults(chainId: number = 8453) {
       });
       return result as `0x${string}`[];
     },
-    staleTime: 1000 * 30,
+    staleTime: 1000 * 10,
+    refetchInterval: 1000 * 15,
+    refetchOnWindowFocus: true,
     retry: 2,
   });
 }
