@@ -65,8 +65,8 @@ export default function Home() {
             <div className="text-center mb-10 sm:mb-16">
               <div className="relative h-16 sm:h-24 mx-auto mb-6 sm:mb-8 w-auto">
                 <Image
-                  src="/logotethcali.png"
-                  alt="ETH CALI"
+                  src="/tokens/1up.png"
+                  alt="Gaming Tower"
                   width={96}
                   height={96}
                   className="h-16 sm:h-24 mx-auto w-auto"
@@ -74,7 +74,7 @@ export default function Home() {
                 />
               </div>
               <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent mb-4 sm:mb-6 px-2">
-                ETH CALI WALLET
+                GAMING TOWER APP
               </h1>
               <p className="text-base sm:text-xl text-gray-400 max-w-3xl mx-auto mb-6 sm:mb-8 px-4">
                 Secure multi-chain wallet with gas sponsorship and professional-grade infrastructure for the decentralized web.
@@ -128,6 +128,26 @@ export default function Home() {
                   <h3 className="text-base sm:text-xl font-bold text-purple-400 mb-2 sm:mb-3">POAP</h3>
                   <p className="text-gray-500 text-xs sm:text-sm">
                     Proof of Attendance Protocol for event verification and discounts.
+                  </p>
+                </div>
+
+                <div className="bg-gray-900/50 border border-gray-700 rounded-xl p-4 sm:p-8 text-center">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-pink-500/10 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <Image src="/infraused/lifi.png" alt="LiFi" width={40} height={40} className="w-8 h-8 sm:w-10 sm:h-10" unoptimized />
+                  </div>
+                  <h3 className="text-base sm:text-xl font-bold text-pink-400 mb-2 sm:mb-3">LiFi</h3>
+                  <p className="text-gray-500 text-xs sm:text-sm">
+                    Cross-chain swaps and bridges across all major networks.
+                  </p>
+                </div>
+
+                <div className="bg-gray-900/50 border border-gray-700 rounded-xl p-4 sm:p-8 text-center">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-yellow-500/10 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <Image src="/infraused/chainlink.png" alt="Chainlink" width={40} height={40} className="w-8 h-8 sm:w-10 sm:h-10" unoptimized />
+                  </div>
+                  <h3 className="text-base sm:text-xl font-bold text-yellow-400 mb-2 sm:mb-3">Chainlink</h3>
+                  <p className="text-gray-500 text-xs sm:text-sm">
+                    Decentralized oracle network for reliable token price feeds.
                   </p>
                 </div>
 
@@ -255,6 +275,14 @@ export default function Home() {
                 <p className="text-gray-400 text-xs sm:text-sm text-center sm:text-left">&copy; 2023 Ethereum Cali. Todos los derechos reservados.</p>
                 <div>
                   <Image src="/branding/Logo_Nodo_CLO_ETH_CO-01.png" alt="Ethereum Colombia Node" width={120} height={32} className="h-6 sm:h-8 w-auto" unoptimized />
+                </div>
+              </div>
+
+              <div className="border-t border-gray-800 mt-6 pt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <span className="text-gray-600 text-xs">Powered by</span>
+                <div className="flex items-center gap-6">
+                  <Image src="/1x1ethcali.png" alt="ETH Cali" width={36} height={36} className="h-8 w-auto opacity-70 hover:opacity-100 transition-opacity" unoptimized />
+                  <Image src="/ekinoxis.png" alt="Ekinoxis" width={36} height={36} className="h-8 w-auto opacity-70 hover:opacity-100 transition-opacity" unoptimized />
                 </div>
               </div>
             </div>

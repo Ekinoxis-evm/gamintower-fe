@@ -20,7 +20,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   }
   
   // Define metadata constants
-  const title = 'ETH CALI - Web3 Wallet';
+  const title = '1UP Gaming Tower app';
   const description = 'Fully open-sourced Web3 wallet for the ETH CALI community.';
   const siteUrl = 'https://wallet.ethcali.org';
   const imageUrl = `${siteUrl}/banner_ethcali.jpg`;
