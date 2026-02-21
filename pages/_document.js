@@ -12,16 +12,32 @@ class MyDocument extends Document {
           <meta charSet="utf-8" />
           <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
           <link rel="manifest" href="/manifest.json" />
-          <link rel="icon" href="/1x1ethcali.png" type="image/png" />
+          <link rel="icon" href="/tokens/1up.png" type="image/png" />
+          {/* Apple PWA */}
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+          <meta name="apple-mobile-web-app-title" content="ETH CALI" />
+          <link rel="apple-touch-icon" href="/tokens/1up.png" />
           <meta name="theme-color" content="#000000" />
         </Head>
         <body>
           <Main />
           <NextScript />
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                if ('serviceWorker' in navigator) {
+                  window.addEventListener('load', function () {
+                    navigator.serviceWorker.register('/sw.js');
+                  });
+                }
+              `,
+            }}
+          />
         </body>
       </Html>
     );
   }
 }
 
-export default MyDocument; 
+export default MyDocument;
