@@ -97,28 +97,29 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
     }
   })();
   
-  // Calculate USD values
+  // Calculate COP values (1 UP = 1000 COP fixed rate)
   const ethPrice = getPriceForToken('ETH');
   const usdcPrice = getPriceForToken('USDC');
   const usdtPrice = getPriceForToken('USDT');
   const eurcPrice = getPriceForToken('EURC');
 
-  const ethValueUsd = parseFloat(balances.ethBalance) * ethPrice.price;
-  const usdcValueUsd = parseFloat(balances.uscBalance) * usdcPrice.price;
-  const usdtValueUsd = parseFloat(balances.usdtBalance || '0') * usdtPrice.price;
-  const eurcValueUsd = parseFloat(balances.eurcBalance || '0') * eurcPrice.price;
-  const totalValueUsd = ethValueUsd + usdcValueUsd + usdtValueUsd + eurcValueUsd;
-
-  // 1UP balance — no price feed, show $0.00
   const oneUpBalance = balances.oneUpBalance || '0';
-  
-  // Format USD values
-  const formatUsd = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
+  const ONE_UP_COP_RATE = 1000;
+
+  const ethValueCop = parseFloat(balances.ethBalance) * ethPrice.cop;
+  const usdcValueCop = parseFloat(balances.uscBalance) * usdcPrice.cop;
+  const usdtValueCop = parseFloat(balances.usdtBalance || '0') * usdtPrice.cop;
+  const eurcValueCop = parseFloat(balances.eurcBalance || '0') * eurcPrice.cop;
+  const oneUpValueCop = parseFloat(oneUpBalance) * ONE_UP_COP_RATE;
+  const totalValueCop = ethValueCop + usdcValueCop + usdtValueCop + eurcValueCop + oneUpValueCop;
+
+  // Format COP values with 0 decimals
+  const formatCop = (value: number) => {
+    return new Intl.NumberFormat('es-CO', {
       style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(value);
   };
   
@@ -338,7 +339,7 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
       <div className="portfolio-hero">
         <div className="portfolio-value-section">
           <span className="portfolio-label">Total Balance</span>
-          <div className="portfolio-amount">{formatUsd(totalValueUsd)}</div>
+          <div className="portfolio-amount">{formatCop(totalValueCop)} <span className="portfolio-currency">COP</span></div>
         </div>
 
         {/* Quick Actions - Mobile First */}
@@ -545,8 +546,8 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
                 </div>
               </div>
               <div className="token-balance">
-                <div className="balance-amount">{formatTokenBalance(balances.ethBalance, 6)}</div>
-                <div className="balance-usd">{formatUsd(ethValueUsd)}</div>
+                <div className="balance-amount">{formatTokenBalance(balances.ethBalance, 2)}</div>
+                <div className="balance-usd">{formatCop(ethValueCop)}</div>
               </div>
             </div>
 
@@ -560,8 +561,8 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
                 </div>
               </div>
               <div className="token-balance">
-                <div className="balance-amount">{formatTokenBalance(balances.uscBalance, 6)}</div>
-                <div className="balance-usd">{formatUsd(usdcValueUsd)}</div>
+                <div className="balance-amount">{formatTokenBalance(balances.uscBalance, 2)}</div>
+                <div className="balance-usd">{formatCop(usdcValueCop)}</div>
               </div>
             </div>
 
@@ -575,8 +576,8 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
                 </div>
               </div>
               <div className="token-balance">
-                <div className="balance-amount">{formatTokenBalance(balances.usdtBalance || '0', 6)}</div>
-                <div className="balance-usd">{formatUsd(usdtValueUsd)}</div>
+                <div className="balance-amount">{formatTokenBalance(balances.usdtBalance || '0', 2)}</div>
+                <div className="balance-usd">{formatCop(usdtValueCop)}</div>
               </div>
             </div>
 
@@ -590,8 +591,8 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
                 </div>
               </div>
               <div className="token-balance">
-                <div className="balance-amount">{formatTokenBalance(balances.eurcBalance || '0', 6)}</div>
-                <div className="balance-usd">{formatUsd(eurcValueUsd)}</div>
+                <div className="balance-amount">{formatTokenBalance(balances.eurcBalance || '0', 2)}</div>
+                <div className="balance-usd">{formatCop(eurcValueCop)}</div>
               </div>
             </div>
 
@@ -606,8 +607,8 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
                   </div>
                 </div>
                 <div className="token-balance">
-                  <div className="balance-amount">{formatTokenBalance(oneUpBalance, 6)}</div>
-                  <div className="balance-usd">$0.00</div>
+                  <div className="balance-amount">{formatTokenBalance(oneUpBalance, 2)}</div>
+                  <div className="balance-usd">{formatCop(oneUpValueCop)}</div>
                 </div>
               </div>
             )}
@@ -766,6 +767,16 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
           -webkit-text-fill-color: transparent;
           background-clip: text;
           line-height: 1.2;
+          display: flex;
+          align-items: baseline;
+          justify-content: center;
+          gap: 0.35rem;
+        }
+
+        .portfolio-currency {
+          font-size: 1rem;
+          font-weight: 600;
+          opacity: 0.7;
         }
 
         /* Wallet Address Card - Compact */
