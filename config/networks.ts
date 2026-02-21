@@ -6,6 +6,7 @@ import {
   CHAIN_IDS,
   EXPLORER_URLS,
   NETWORK_NAMES,
+  NETWORK_SHORT_NAMES,
   NETWORK_COLORS,
   TOKEN_ADDRESSES,
   getRpcUrl,
@@ -83,12 +84,24 @@ export const UNICHAIN: Network = {
   color: NETWORK_COLORS[CHAIN_IDS.UNICHAIN],
 };
 
+export const BASE_SEPOLIA_NETWORK: Network = {
+  id: CHAIN_IDS.BASE_SEPOLIA,
+  name: 'Base Sepolia',
+  shortName: NETWORK_SHORT_NAMES[CHAIN_IDS.BASE_SEPOLIA],
+  icon: getNetworkLogoUrl(CHAIN_IDS.BASE),
+  explorerUrl: EXPLORER_URLS[CHAIN_IDS.BASE_SEPOLIA],
+  rpcUrl: getRpcUrl(CHAIN_IDS.BASE_SEPOLIA),
+  testnet: true,
+  color: NETWORK_COLORS[CHAIN_IDS.BASE_SEPOLIA],
+};
+
 // Network lookup map
 const NETWORKS: Record<ChainId, Network> = {
   [CHAIN_IDS.ETHEREUM]: ETHEREUM,
   [CHAIN_IDS.BASE]: BASE,
   [CHAIN_IDS.OPTIMISM]: OPTIMISM,
   [CHAIN_IDS.UNICHAIN]: UNICHAIN,
+  [CHAIN_IDS.BASE_SEPOLIA]: BASE_SEPOLIA_NETWORK,
 };
 
 // Default network

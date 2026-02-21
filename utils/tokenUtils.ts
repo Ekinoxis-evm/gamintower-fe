@@ -10,6 +10,53 @@ export const COINGECKO_IDS: Record<string, string> = {
 // Base URL for CoinGecko images
 const COINGECKO_IMAGE_URL = 'https://assets.coingecko.com/coins/images';
 
+export interface TokenMeta {
+  symbol: string;
+  name: string;
+  logoUrl: string;
+  decimals: number;
+}
+
+// Known token metadata keyed by lowercase address
+const TOKEN_META_BY_ADDRESS: Record<string, TokenMeta> = {
+  // 1UP — Base Mainnet
+  '0xf6813c71e620c654ff6049a485e38d9494efabdf': {
+    symbol: '1UP',
+    name: '1UP Token',
+    logoUrl: '/tokens/1up.png',
+    decimals: 18,
+  },
+  // USDC — Base Mainnet
+  '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913': {
+    symbol: 'USDC',
+    name: 'USD Coin',
+    logoUrl: `${COINGECKO_IMAGE_URL}/6319/large/USD_Coin_icon.png`,
+    decimals: 6,
+  },
+  // EURC — Base Mainnet
+  '0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42': {
+    symbol: 'EURC',
+    name: 'Euro Coin',
+    logoUrl: `${COINGECKO_IMAGE_URL}/26045/large/euro-coin.png`,
+    decimals: 6,
+  },
+};
+
+/**
+ * Resolve token metadata (symbol, name, logo, decimals) from a contract address.
+ * Falls back to a truncated address display for unknown tokens.
+ */
+export function getTokenMetaByAddress(address: string): TokenMeta {
+  const meta = TOKEN_META_BY_ADDRESS[address.toLowerCase()];
+  if (meta) return meta;
+  return {
+    symbol: `${address.slice(0, 6)}…${address.slice(-4)}`,
+    name: 'Unknown Token',
+    logoUrl: '/images/token-default.png',
+    decimals: 18,
+  };
+}
+
 // Fallback images in case CoinGecko fails
 const FALLBACK_IMAGES: Record<string, string> = {
   ETH: '/images/ethereum.png',

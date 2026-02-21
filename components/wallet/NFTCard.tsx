@@ -1,149 +1,46 @@
 import { useState } from 'react';
 import Image from 'next/image';
-import { useWallets } from '@privy-io/react-auth';
 import { UserNFT } from '../../hooks/useUserNFTs';
-import { RedemptionStatus } from '../../types/swag';
-import { NFTQRModal } from './NFTQRModal';
-import { useRedeem } from '../../hooks/useRedemption';
-import { useVariantUri } from '../../hooks/swag';
-import { getIPFSGatewayUrl } from '../../lib/pinata';
-import { useSwagAddresses } from '../../utils/network';
-import { logger } from '../../utils/logger';
-import type { Swag1155Metadata } from '../../types/swag';
 
 interface NFTCardProps {
   nft: UserNFT;
-  onRedeemSuccess?: () => void;
 }
 
-const statusLabels: Record<RedemptionStatus, string> = {
-  [RedemptionStatus.NotRedeemed]: 'Not Redeemed',
-  [RedemptionStatus.PendingFulfillment]: 'Pending Fulfillment',
-  [RedemptionStatus.Fulfilled]: 'Fulfilled',
-};
-
-const statusColors: Record<RedemptionStatus, string> = {
-  [RedemptionStatus.NotRedeemed]: 'bg-slate-500/10 text-slate-400 border-slate-500/30',
-  [RedemptionStatus.PendingFulfillment]: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30',
-  [RedemptionStatus.Fulfilled]: 'bg-green-500/10 text-green-400 border-green-500/30',
-};
-
-export function NFTCard({ nft, onRedeemSuccess }: NFTCardProps) {
+export function NFTCard({ nft }: NFTCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [showQRModal, setShowQRModal] = useState(false);
-  const { wallets: _wallets } = useWallets();
-  const { chainId: defaultChainId } = useSwagAddresses();
-  
-  // Use designAddress and chainId from NFT, or fallback to defaults
-  const designAddress = nft.designAddress;
-  const chainId = nft.chainId || defaultChainId;
-
-  // Fetch metadata URI from contract
-  const { uri } = useVariantUri(designAddress || '', chainId, Number(nft.tokenId));
-  const [metadata, setMetadata] = useState<Swag1155Metadata | null>(null);
-  const [metadataLoaded, setMetadataLoaded] = useState(false);
-
-  if (uri && !metadataLoaded) {
-    setMetadataLoaded(true);
-    const url = getIPFSGatewayUrl(uri) || uri;
-    fetch(url)
-      .then(r => r.json())
-      .then(data => setMetadata(data as Swag1155Metadata))
-      .catch(() => {});
-  }
-
-  // Only initialize useRedeem if we have designAddress
-  const { redeem, canRedeem } = useRedeem(designAddress || '', chainId);
-  const [isRedeeming, setIsRedeeming] = useState(false);
-
-  const handleRedeem = async () => {
-    if (!designAddress) {
-      alert('Design address not available for this NFT');
-      return;
-    }
-    
-    if (!canRedeem || nft.redemptionStatus !== RedemptionStatus.NotRedeemed) {
-      return;
-    }
-
-    setIsRedeeming(true);
-    try {
-      await redeem(nft.tokenId);
-      // Wait a moment for blockchain state to update, then refetch
-      setTimeout(() => {
-        onRedeemSuccess?.();
-        setIsRedeeming(false);
-      }, 2000);
-    } catch (error) {
-      logger.error('Error redeeming NFT:', error);
-      alert(error instanceof Error ? error.message : 'Failed to redeem NFT');
-      setIsRedeeming(false);
-    }
-  };
-
-  // Use image from metadata URI, fallback to NFT metadata image
-  const imageUrl = metadata?.image
-    ? getIPFSGatewayUrl(metadata.image) || metadata.image
-    : (nft.image ? getIPFSGatewayUrl(nft.image) || nft.image : '');
-
-  // Use name and description from metadata URI, fallback to NFT metadata
-  const displayName = metadata?.name || nft.name;
-  const displayDescription = metadata?.description || nft.description;
 
   return (
     <>
       <div className="nft-card">
         <div className="nft-card-header">
           <div className="nft-image-wrapper">
-            {imageUrl ? (
+            {nft.image ? (
               <Image
-                src={imageUrl}
-                alt={displayName}
+                src={nft.image}
+                alt={nft.name}
                 fill
                 className="nft-image"
                 sizes="120px"
-                unoptimized={imageUrl.startsWith('https://gateway.pinata.cloud')}
+                unoptimized
               />
             ) : (
               <div className="nft-image-placeholder" />
             )}
           </div>
           <div className="nft-header-info">
-            <h3 className="nft-name">{displayName}</h3>
+            <h3 className="nft-name">{nft.name}</h3>
             <div className="nft-balance">
               <span className="balance-label">Balance:</span>
               <span className="balance-value">{nft.balance}</span>
             </div>
-            <div className={`nft-status ${statusColors[nft.redemptionStatus]}`}>
-              {statusLabels[nft.redemptionStatus]}
-            </div>
           </div>
         </div>
 
-        {displayDescription && (
-          <p className="nft-description">{displayDescription}</p>
+        {nft.description && (
+          <p className="nft-description">{nft.description}</p>
         )}
 
         <div className="nft-actions">
-          {nft.redemptionStatus === RedemptionStatus.NotRedeemed && (
-            <button
-              onClick={handleRedeem}
-              disabled={!canRedeem || isRedeeming || !designAddress}
-              className="action-btn redeem-btn"
-            >
-              {isRedeeming ? 'Processing...' : !designAddress ? 'Design Address Missing' : 'Redeem Physical Item'}
-            </button>
-          )}
-
-          {nft.redemptionStatus === RedemptionStatus.PendingFulfillment && (
-            <button
-              onClick={() => setShowQRModal(true)}
-              className="action-btn qr-btn"
-            >
-              Show QR Code
-            </button>
-          )}
-
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="action-btn details-btn"
@@ -159,23 +56,7 @@ export function NFTCard({ nft, onRedeemSuccess }: NFTCardProps) {
               <span className="detail-value font-mono">#{nft.tokenId.toString()}</span>
             </div>
 
-            {/* Show attributes from metadata URI if available */}
-            {metadata?.attributes && metadata.attributes.length > 0 && (
-              <div className="nft-attributes">
-                <div className="attributes-header">Attributes</div>
-                <div className="attributes-grid">
-                  {metadata.attributes.map((attr, idx) => (
-                    <div key={idx} className="attribute-item">
-                      <span className="attribute-type">{attr.trait_type}:</span>
-                      <span className="attribute-value">{attr.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Fallback to NFT metadata attributes */}
-            {!metadata?.attributes && nft.attributes && nft.attributes.length > 0 && (
+            {nft.attributes && nft.attributes.length > 0 && (
               <div className="nft-attributes">
                 <div className="attributes-header">Attributes</div>
                 <div className="attributes-grid">
@@ -191,14 +72,6 @@ export function NFTCard({ nft, onRedeemSuccess }: NFTCardProps) {
           </div>
         )}
       </div>
-
-      {showQRModal && (
-        <NFTQRModal
-          tokenId={nft.tokenId}
-          nftName={displayName}
-          onClose={() => setShowQRModal(false)}
-        />
-      )}
 
       <style jsx>{`
         .nft-card {
@@ -241,9 +114,6 @@ export function NFTCard({ nft, onRedeemSuccess }: NFTCardProps) {
           width: 100%;
           height: 100%;
           background: rgba(0, 0, 0, 0.5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
         }
 
         .nft-header-info {
@@ -278,17 +148,6 @@ export function NFTCard({ nft, onRedeemSuccess }: NFTCardProps) {
           font-size: 1rem;
         }
 
-        .nft-status {
-          display: inline-flex;
-          align-items: center;
-          padding: 0.25rem 0.75rem;
-          border-radius: 6px;
-          font-size: 0.75rem;
-          font-weight: 500;
-          border: 1px solid;
-          width: fit-content;
-        }
-
         .nft-description {
           font-size: 0.875rem;
           color: #9ca3af;
@@ -313,33 +172,6 @@ export function NFTCard({ nft, onRedeemSuccess }: NFTCardProps) {
           font-family: monospace;
           text-transform: uppercase;
           letter-spacing: 0.05em;
-        }
-
-        .redeem-btn {
-          background: rgba(34, 211, 238, 0.1);
-          color: #22d3ee;
-          border-color: rgba(34, 211, 238, 0.3);
-        }
-
-        .redeem-btn:hover:not(:disabled) {
-          background: rgba(34, 211, 238, 0.2);
-          border-color: rgba(34, 211, 238, 0.5);
-        }
-
-        .redeem-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .qr-btn {
-          background: rgba(251, 191, 36, 0.1);
-          color: #fbbf24;
-          border-color: rgba(251, 191, 36, 0.3);
-        }
-
-        .qr-btn:hover {
-          background: rgba(251, 191, 36, 0.2);
-          border-color: rgba(251, 191, 36, 0.5);
         }
 
         .details-btn {

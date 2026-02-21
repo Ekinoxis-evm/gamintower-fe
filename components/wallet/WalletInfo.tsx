@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { Wallet, TokenBalance } from '../../types/index';
 import Loading from '../../components/shared/Loading';
 import { getTokenLogoUrl, formatTokenBalance } from '../../utils/tokenUtils';
@@ -108,6 +107,9 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
   const usdtValueUsd = parseFloat(balances.usdtBalance || '0') * usdtPrice.price;
   const eurcValueUsd = parseFloat(balances.eurcBalance || '0') * eurcPrice.price;
   const totalValueUsd = ethValueUsd + usdcValueUsd + usdtValueUsd + eurcValueUsd;
+
+  // 1UP balance — no price feed, show $0.00
+  const oneUpBalance = balances.oneUpBalance || '0';
   
   // Format USD values
   const formatUsd = (value: number) => {
@@ -589,6 +591,23 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
                 <div className="balance-usd">{formatUsd(eurcValueUsd)}</div>
               </div>
             </div>
+
+            {/* 1UP Balance (Base mainnet only) */}
+            {chainId === 8453 && (
+              <div className="token-item">
+                <div className="token-info">
+                  <Image src="/tokens/1up.png" alt="1UP" width={32} height={32} className="token-icon" unoptimized />
+                  <div className="token-details">
+                    <span className="token-name">1UP Token</span>
+                    <span className="token-symbol">1UP</span>
+                  </div>
+                </div>
+                <div className="token-balance">
+                  <div className="balance-amount">{formatTokenBalance(oneUpBalance, 6)}</div>
+                  <div className="balance-usd">$0.00</div>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           /* Collectibles Tab */
@@ -608,9 +627,6 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
                 </div>
                 <h4>No Collectibles Yet</h4>
                 <p>Your NFTs and collectibles will appear here</p>
-                <Link href="/swag" className="browse-swag-link">
-                  Browse ETH CALI Swag
-                </Link>
               </div>
             ) : (
               <div>
@@ -621,14 +637,8 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
                 <div className="nfts-grid">
                   {nfts.map((nft) => (
                     <NFTCard
-                      key={`${nft.tokenId.toString()}-${nft.redemptionStatus}`}
+                      key={nft.tokenId.toString()}
                       nft={nft}
-                      onRedeemSuccess={() => {
-                        // Refetch NFTs after redemption to update status
-                        setTimeout(() => {
-                          refetchNFTs();
-                        }, 2000);
-                      }}
                     />
                   ))}
                 </div>
@@ -1329,21 +1339,6 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
           }
         }
 
-        .browse-swag-link {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.75rem 1.5rem;
-          background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.2));
-          border: 1px solid rgba(6, 182, 212, 0.4);
-          border-radius: 8px;
-          color: #06b6d4;
-          font-size: 0.875rem;
-          font-weight: 600;
-          text-decoration: none;
-          transition: all 0.2s ease;
-        }
-
         /* Quick Actions - Professional Mobile UI */
         .quick-actions {
           display: grid;
@@ -1452,11 +1447,6 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
           to { transform: rotate(360deg); }
         }
 
-        .browse-swag-link:hover {
-          background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(139, 92, 246, 0.3));
-          border-color: rgba(6, 182, 212, 0.6);
-          transform: translateY(-1px);
-        }
       `}</style>
     </div>
   );

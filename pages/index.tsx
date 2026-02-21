@@ -77,8 +77,7 @@ export default function Home() {
                 ETH CALI WALLET
               </h1>
               <p className="text-base sm:text-xl text-gray-400 max-w-3xl mx-auto mb-6 sm:mb-8 px-4">
-                Secure multi-chain wallet with gas sponsorship, sybil-resistant identity verification,
-                and professional-grade infrastructure for the decentralized web.
+                Secure multi-chain wallet with gas sponsorship and professional-grade infrastructure for the decentralized web.
               </p>
             </div>
 
@@ -109,16 +108,6 @@ export default function Home() {
                   <h3 className="text-base sm:text-xl font-bold text-blue-400 mb-2 sm:mb-3">Privy</h3>
                   <p className="text-gray-500 text-xs sm:text-sm">
                     Secure authentication with email and passkeys.
-                  </p>
-                </div>
-
-                <div className="bg-gray-900/50 border border-gray-700 rounded-xl p-4 sm:p-8 text-center">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-purple-500/10 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                    <Image src="/infraused/zkpassportid.png" alt="ZK Passport" width={40} height={40} className="w-8 h-8 sm:w-10 sm:h-10" unoptimized />
-                  </div>
-                  <h3 className="text-base sm:text-xl font-bold text-purple-400 mb-2 sm:mb-3">ZK Passport</h3>
-                  <p className="text-gray-500 text-xs sm:text-sm">
-                    Sybil-resistant identity with zero-knowledge proofs.
                   </p>
                 </div>
 
@@ -186,15 +175,6 @@ export default function Home() {
                   </p>
                 </div>
 
-                <div className="bg-gray-900/50 border border-green-500/20 rounded-xl p-4 sm:p-6 text-center">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500/10 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                    <span className="text-xl sm:text-2xl">⛽</span>
-                  </div>
-                  <h3 className="text-sm sm:text-lg font-bold text-green-400 mb-2 sm:mb-3">Faucet ETH</h3>
-                  <p className="text-gray-500 text-xs sm:text-sm">
-                    Builders need gas for deployments. We gotchu.
-                  </p>
-                </div>
               </div>
             </div>
 

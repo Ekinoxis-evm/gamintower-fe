@@ -4,7 +4,6 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { getChainRpc } from '../config/networks';
-import { useAdminStatus } from '../hooks/useAdminStatus';
 import { logger } from '../utils/logger';
 
 // Icons as simple SVG components for cleaner mobile menu
@@ -13,25 +12,19 @@ const WalletIcon = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" />
   </svg>
 );
-const FaucetIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9zm3.75 11.625a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-  </svg>
-);
 const IdentityIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
   </svg>
 );
-const SwagIcon = () => (
+const ChallengesIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 002.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 012.916.52 6.003 6.003 0 01-5.395 4.972m0 0a6.726 6.726 0 01-2.749 1.35m0 0a6.772 6.772 0 01-3.044 0" />
   </svg>
 );
-const AdminIcon = () => (
+const CoursesIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.107-1.204l-.527-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5" />
   </svg>
 );
 const LogoutIcon = () => (
@@ -91,28 +84,12 @@ const Navigation: React.FC<NavigationProps> = ({
 
   const userWallet = wallets?.[0];
 
-  // Check if user is admin/owner on the current chain's contracts (single combined query)
-  const {
-    isSwagAdmin,
-    isFaucetAdmin,
-    isFaucetSuperAdmin,
-    isZKPassportOwner,
-  } = useAdminStatus(displayChainId);
-
   const mainNavItems = [
     { href: '/wallet', label: 'Wallet', icon: WalletIcon },
-    { href: '/faucet', label: 'Faucet', icon: FaucetIcon },
-    { href: '/sybil', label: 'Identity', icon: IdentityIcon },
-    { href: '/swag', label: 'Swag', icon: SwagIcon },
+    { href: '/identity', label: 'Identity', icon: IdentityIcon },
+    { href: '/challenges', label: 'Challenges', icon: ChallengesIcon },
+    { href: '/courses', label: 'Courses', icon: CoursesIcon },
   ];
-
-  const adminNavItems = [
-    ...(isSwagAdmin ? [{ href: '/swag/admin', label: 'Swag Admin', icon: AdminIcon }] : []),
-    ...(isFaucetAdmin || isFaucetSuperAdmin ? [{ href: '/faucet/admin', label: 'Faucet Admin', icon: AdminIcon }] : []),
-    ...(isZKPassportOwner ? [{ href: '/sybil/admin', label: 'Identity Admin', icon: AdminIcon }] : []),
-  ];
-
-  const navItems = [...mainNavItems, ...adminNavItems];
 
   // Lock body scroll and signal mobile menu state when open
   useEffect(() => {
@@ -288,7 +265,7 @@ const Navigation: React.FC<NavigationProps> = ({
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => (
+            {mainNavItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -474,42 +451,6 @@ const Navigation: React.FC<NavigationProps> = ({
               })}
             </div>
 
-            {/* Admin Section */}
-            {adminNavItems.length > 0 && (
-              <div className="px-3 mt-4">
-                <div className="px-4 pb-2 mb-1 border-b border-slate-800/50">
-                  <span className="text-[10px] text-orange-500/70 uppercase tracking-widest font-medium">Admin</span>
-                </div>
-                <div className="space-y-1">
-                  {adminNavItems.map((item) => {
-                    const IconComponent = item.icon;
-                    const active = isActive(item.href);
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={closeMobileMenu}
-                        className={`
-                          flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all
-                          ${active
-                            ? 'bg-orange-500/15 text-orange-400'
-                            : 'text-orange-400/70 active:bg-slate-800'
-                          }
-                        `}
-                      >
-                        <span className={active ? 'text-orange-400' : 'text-orange-500/50'}>
-                          <IconComponent />
-                        </span>
-                        {item.label}
-                        {active && (
-                          <span className="ml-auto w-1.5 h-1.5 rounded-full bg-orange-400" />
-                        )}
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Footer - Always visible logout */}

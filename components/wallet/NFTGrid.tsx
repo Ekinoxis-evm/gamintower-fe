@@ -2,7 +2,6 @@
  * NFTGrid - Display collectibles/NFTs in a grid
  */
 import React from 'react';
-import Link from 'next/link';
 import { NFTCard } from './NFTCard';
 import Loading from '../shared/Loading';
 import type { UserNFT } from '../../hooks/useUserNFTs';
@@ -11,14 +10,12 @@ interface NFTGridProps {
   nfts: UserNFT[];
   isLoading: boolean;
   onRefetch: () => void;
-  onRedeemSuccess?: () => void;
 }
 
 const NFTGrid: React.FC<NFTGridProps> = ({
   nfts,
   isLoading,
-  onRefetch,
-  onRedeemSuccess,
+  onRefetch: _onRefetch,
 }) => {
   if (isLoading) {
     return (
@@ -47,9 +44,6 @@ const NFTGrid: React.FC<NFTGridProps> = ({
         </div>
         <h4>No Collectibles Yet</h4>
         <p>Your NFTs and collectibles will appear here</p>
-        <Link href="/swag" className="browse-swag-link">
-          Browse ETH CALI Swag
-        </Link>
 
         <style jsx>{`
           .collectibles-empty {
@@ -75,26 +69,7 @@ const NFTGrid: React.FC<NFTGridProps> = ({
           .collectibles-empty p {
             font-size: 0.85rem;
             color: #9ca3af;
-            margin: 0 0 1.25rem;
-          }
-
-          :global(.browse-swag-link) {
-            display: inline-block;
-            padding: 0.625rem 1.25rem;
-            background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.2));
-            border: 1px solid rgba(6, 182, 212, 0.3);
-            border-radius: 8px;
-            color: #06b6d4;
-            font-size: 0.85rem;
-            font-weight: 500;
-            text-decoration: none;
-            transition: all 0.2s ease;
-          }
-
-          :global(.browse-swag-link:hover) {
-            background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(139, 92, 246, 0.3));
-            border-color: rgba(6, 182, 212, 0.5);
-            transform: translateY(-1px);
+            margin: 0;
           }
         `}</style>
       </div>
@@ -110,16 +85,8 @@ const NFTGrid: React.FC<NFTGridProps> = ({
       <div className="nfts-grid">
         {nfts.map((nft) => (
           <NFTCard
-            key={`${nft.tokenId.toString()}-${nft.redemptionStatus}`}
+            key={nft.tokenId.toString()}
             nft={nft}
-            onRedeemSuccess={() => {
-              if (onRedeemSuccess) {
-                onRedeemSuccess();
-              }
-              setTimeout(() => {
-                onRefetch();
-              }, 2000);
-            }}
           />
         ))}
       </div>

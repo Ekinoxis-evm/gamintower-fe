@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { createPublicClient, http, formatUnits } from 'viem';
-import { base, mainnet, optimism } from 'viem/chains';
+import { base, mainnet, optimism, baseSepolia } from 'viem/chains';
 import { TokenBalance } from '../types/index';
 import { getChainRpc } from '../config/networks';
+import { ONEUP_TOKEN_ADDRESS } from '../config/constants';
 import { logger } from '../utils/logger';
 
 // Chain IDs
@@ -11,6 +12,7 @@ const CHAIN_IDS = {
   ETHEREUM: 1,
   OPTIMISM: 10,
   UNICHAIN: 130,
+  BASE_SEPOLIA: 84532,
 } as const;
 
 // Token addresses by network
@@ -56,6 +58,7 @@ const getChainName = (id: number): string => {
     case CHAIN_IDS.BASE: return 'Base';
     case CHAIN_IDS.OPTIMISM: return 'Optimism';
     case CHAIN_IDS.UNICHAIN: return 'Unichain';
+    case CHAIN_IDS.BASE_SEPOLIA: return 'Base Sepolia';
     default: return `Chain ${id}`;
   }
 };
@@ -65,6 +68,7 @@ const getChainForId = (id: number) => {
   switch (id) {
     case CHAIN_IDS.ETHEREUM: return mainnet;
     case CHAIN_IDS.OPTIMISM: return optimism;
+    case CHAIN_IDS.BASE_SEPOLIA: return baseSepolia;
     default: return base;
   }
 };
@@ -74,6 +78,7 @@ const DEFAULT_BALANCES: TokenBalance = {
   uscBalance: '0',
   eurcBalance: '0',
   usdtBalance: '0',
+  oneUpBalance: '0',
 };
 
 /**
@@ -107,7 +112,7 @@ export function useTokenBalances(address: string | undefined, chainId: number = 
         functionName: 'balanceOf';
         args: [`0x${string}`];
       }[] = [];
-      const tokenOrder: ('USDC' | 'EURC' | 'USDT')[] = [];
+      const tokenOrder: ('USDC' | 'EURC' | 'USDT' | '1UP')[] = [];
 
       if (tokens.USDC) {
         calls.push({
@@ -136,6 +141,16 @@ export function useTokenBalances(address: string | undefined, chainId: number = 
         });
         tokenOrder.push('USDT');
       }
+      // Add 1UP on Base mainnet only
+      if (chainId === CHAIN_IDS.BASE) {
+        calls.push({
+          address: ONEUP_TOKEN_ADDRESS,
+          abi: ERC20_ABI,
+          functionName: 'balanceOf',
+          args: [address as `0x${string}`],
+        });
+        tokenOrder.push('1UP');
+      }
 
       // Fetch ETH balance and token balances in parallel (2 RPC calls instead of 4)
       const [ethBalance, tokenResults] = await Promise.all([
@@ -150,6 +165,7 @@ export function useTokenBalances(address: string | undefined, chainId: number = 
         USDC: BigInt(0),
         EURC: BigInt(0),
         USDT: BigInt(0),
+        '1UP': BigInt(0),
       };
 
       tokenResults.forEach((result, index) => {
@@ -161,12 +177,13 @@ export function useTokenBalances(address: string | undefined, chainId: number = 
         }
       });
 
-      // Format balances (ETH has 18 decimals, stablecoins have 6)
+      // Format balances (ETH and 1UP have 18 decimals, stablecoins have 6)
       const formattedBalances: TokenBalance = {
         ethBalance: formatUnits(ethBalance, 18),
         uscBalance: formatUnits(balanceMap.USDC, 6),
         eurcBalance: formatUnits(balanceMap.EURC, 6),
         usdtBalance: formatUnits(balanceMap.USDT, 6),
+        oneUpBalance: chainId === CHAIN_IDS.BASE ? formatUnits(balanceMap['1UP'], 18) : '0',
       };
 
       logger.debug(`Balances fetched for ${getChainName(chainId)}`);
