@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import Button from '../shared/Button';
 import Loading from '../shared/Loading';
 import QRScanner from './QRScanner';
+import { getTokenLogoUrl } from '../../utils/tokenUtils';
 
 interface TokenOption {
   symbol: string;
@@ -28,21 +30,21 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
   initialRecipient = '',
   chainId,
 }) => {
-    const explorerBase = (() => {
-      switch (chainId) {
-        case 1:
-          return 'https://etherscan.io';
-        case 10:
-          return 'https://optimism.etherscan.io';
-        case 8453:
-          return 'https://basescan.org';
-        case 130:
-          return 'https://unichain.blockscout.com';
-        default:
-          return undefined;
-      }
-    })();
-  // Initialize selectedToken safely
+  const explorerBase = (() => {
+    switch (chainId) {
+      case 1:
+        return 'https://etherscan.io';
+      case 10:
+        return 'https://optimism.etherscan.io';
+      case 8453:
+        return 'https://basescan.org';
+      case 130:
+        return 'https://unichain.blockscout.com';
+      default:
+        return undefined;
+    }
+  })();
+
   const getInitialToken = (): TokenOption | null => {
     if (availableTokens.length === 0) return null;
     return availableTokens.find(t => t.symbol === 'ETH') || availableTokens[0];
@@ -55,15 +57,15 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
   const [amountError, setAmountError] = useState<string>('');
   const [recipientError, setRecipientError] = useState<string>('');
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
-  
-  // Update recipient if initialRecipient changes
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (initialRecipient) {
       setRecipient(initialRecipient);
     }
   }, [initialRecipient]);
 
-  // Update selected token when availableTokens changes
   useEffect(() => {
     if (availableTokens.length > 0) {
       const currentToken = selectedToken;
@@ -76,13 +78,21 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
     }
   }, [availableTokens, selectedToken]);
 
-  // Real-time validation for recipient address
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    if (isDropdownOpen) document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [isDropdownOpen]);
+
   useEffect(() => {
     if (!recipient) {
       setRecipientError('');
       return;
     }
-    
     if (!recipient.startsWith('0x') || recipient.length !== 42) {
       setRecipientError('Invalid Ethereum address format');
     } else {
@@ -90,21 +100,17 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
     }
   }, [recipient]);
 
-  // Real-time validation for amount
   useEffect(() => {
     if (!amount) {
       setAmountError('');
       return;
     }
-
     if (!selectedToken) {
       setAmountError('');
       return;
     }
-
     const amountNum = Number(amount);
     const balanceNum = Number(selectedToken.balance);
-
     if (balanceNum === 0) {
       setAmountError(`You have 0 ${selectedToken.symbol} balance. Cannot send.`);
     } else if (isNaN(amountNum) || amountNum <= 0) {
@@ -121,37 +127,28 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
       setError('No token selected');
       return;
     }
-
-    // Final validation before sending
     if (recipientError || amountError) {
       setError('Please fix the errors above before sending');
       return;
     }
-
     if (!recipient || !recipient.startsWith('0x') || recipient.length !== 42) {
       setRecipientError('Please enter a valid Ethereum address');
       return;
     }
-
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
       setAmountError('Please enter a valid amount');
       return;
     }
-
     if (Number(amount) > Number(selectedToken.balance)) {
       setAmountError(`Insufficient balance. Max: ${selectedToken.balance} ${selectedToken.symbol}`);
       return;
     }
-
     setError('');
     setRecipientError('');
     setAmountError('');
-    
     try {
       await onSend(recipient, amount, selectedToken.symbol);
       if (!txHash) {
-        // Only close if no transaction hash is returned
-        // If we have a txHash, we might want to show the transaction info
         handleClose();
       }
     } catch (err: any) {
@@ -177,28 +174,21 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
   const handlePaste = async () => {
     try {
       const text = await navigator.clipboard.readText();
-      // Validate if it's a valid Ethereum address
       if (text.startsWith('0x') && text.length === 42) {
         setRecipient(text);
         setError('');
       } else {
         setError('Invalid address in clipboard. Please paste a valid Ethereum address.');
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to read from clipboard. Please paste the address manually.');
     }
   };
 
-  // Handle QR code scan result
   const handleQRScan = (address: string) => {
     setRecipient(address);
     setIsQRScannerOpen(false);
-    setError(''); // Clear any previous errors
-  };
-
-  // Open QR scanner
-  const openQRScanner = () => {
-    setIsQRScannerOpen(true);
+    setError('');
   };
 
   return (
@@ -210,29 +200,88 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
         </div>
 
         <div className="modal-body">
-          {/* Token Selection */}
+          {/* Token Selection — Dropdown */}
           <div className="form-group">
-            <label htmlFor="token">Select Token</label>
+            <label>Select Token</label>
             {availableTokens.length > 0 ? (
-              <div className="token-selector">
-                {availableTokens.map((token) => {
-                  const hasBalance = parseFloat(token.balance) > 0;
-                  return (
-                    <button
-                      key={token.symbol}
-                      type="button"
-                      className={`token-option ${selectedToken?.symbol === token.symbol ? 'active' : ''} ${!hasBalance ? 'no-balance' : ''}`}
-                      onClick={() => setSelectedToken(token)}
-                      disabled={isSending}
-                      title={!hasBalance ? `No ${token.symbol} balance available` : `Send ${token.symbol}`}
-                    >
-                      <span className="token-symbol">{token.symbol}</span>
-                      <span className={`token-balance-small ${!hasBalance ? 'zero-balance' : ''}`}>
-                        {parseFloat(token.balance).toFixed(6)}
-                      </span>
-                    </button>
-                  );
-                })}
+              <div className="token-dropdown" ref={dropdownRef}>
+                <button
+                  type="button"
+                  className="token-dropdown-trigger"
+                  onClick={() => setIsDropdownOpen((o) => !o)}
+                  disabled={isSending}
+                >
+                  {selectedToken ? (
+                    <>
+                      <Image
+                        src={getTokenLogoUrl(selectedToken.symbol)}
+                        alt={selectedToken.symbol}
+                        width={24}
+                        height={24}
+                        className="token-logo"
+                        unoptimized
+                      />
+                      <span className="dropdown-symbol">{selectedToken.symbol}</span>
+                      <span className="dropdown-name">{selectedToken.name}</span>
+                      <span className="dropdown-balance">{parseFloat(selectedToken.balance).toFixed(4)}</span>
+                    </>
+                  ) : (
+                    <span className="dropdown-placeholder">Select token...</span>
+                  )}
+                  <svg
+                    className={`dropdown-chevron ${isDropdownOpen ? 'open' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {isDropdownOpen && (
+                  <div className="token-dropdown-menu">
+                    {availableTokens.map((token) => {
+                      const hasBalance = parseFloat(token.balance) > 0;
+                      const isSelected = selectedToken?.symbol === token.symbol;
+                      return (
+                        <button
+                          key={token.symbol}
+                          type="button"
+                          className={`token-dropdown-item ${isSelected ? 'selected' : ''}`}
+                          onClick={() => {
+                            setSelectedToken(token);
+                            setIsDropdownOpen(false);
+                          }}
+                        >
+                          <Image
+                            src={getTokenLogoUrl(token.symbol)}
+                            alt={token.symbol}
+                            width={28}
+                            height={28}
+                            className="token-logo"
+                            unoptimized
+                          />
+                          <div className="dropdown-item-info">
+                            <span className="dropdown-item-symbol">{token.symbol}</span>
+                            <span className="dropdown-item-name">{token.name}</span>
+                          </div>
+                          <div className="dropdown-item-balance">
+                            <span className={hasBalance ? 'has-balance' : 'no-balance-text'}>
+                              {parseFloat(token.balance).toFixed(4)}
+                            </span>
+                          </div>
+                          {isSelected && (
+                            <svg className="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="no-tokens-message">
@@ -251,16 +300,16 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
           <div className="form-group">
             <label htmlFor="recipient">Recipient Address</label>
             <div className="recipient-input-container">
-              <button 
-                onClick={openQRScanner} 
+              <button
+                onClick={() => setIsQRScannerOpen(true)}
                 className="scan-button"
                 disabled={isSending}
                 title="Scan QR Code"
               >
                 📷
               </button>
-              <button 
-                onClick={handlePaste} 
+              <button
+                onClick={handlePaste}
                 className="paste-button"
                 disabled={isSending}
                 title="Paste Address"
@@ -297,8 +346,8 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
                 disabled={isSending || !selectedToken}
                 className={amountError ? 'input-error' : ''}
               />
-              <button 
-                onClick={handleSetMaxAmount} 
+              <button
+                onClick={handleSetMaxAmount}
                 className="max-button"
                 disabled={isSending || !selectedToken}
               >
@@ -309,20 +358,20 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
             {selectedToken && !amountError && amount && Number(amount) > 0 && Number(amount) <= Number(selectedToken.balance) && (
               <div className="amount-preview">
                 ≈ {((Number(amount) / Number(selectedToken.balance)) * 100).toFixed(2)}% of balance
-            </div>
+              </div>
             )}
           </div>
 
           {error && <div className="error-message">{error}</div>}
-          
+
           {txHash && (
             <div className="transaction-info">
               <p><strong>Transaction sent!</strong></p>
               <p className="tx-hash">{txHash}</p>
               {explorerBase && (
-                <a 
-                  href={`${explorerBase}/tx/${txHash}`} 
-                  target="_blank" 
+                <a
+                  href={`${explorerBase}/tx/${txHash}`}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="block-explorer-link"
                 >
@@ -334,18 +383,18 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
         </div>
 
         <div className="modal-footer">
-          <Button 
-            onClick={handleClose} 
+          <Button
+            onClick={handleClose}
             variant="secondary"
             disabled={isSending}
           >
             {txHash ? 'Close' : 'Cancel'}
           </Button>
           {!txHash && (
-            <Button 
-              onClick={handleSend} 
+            <Button
+              onClick={handleSend}
               variant="primary"
-              disabled={isSending || !selectedToken || !recipient || !amount || !!recipientError || !!amountError || (selectedToken && parseFloat(selectedToken.balance) === 0)}
+              disabled={isSending || !selectedToken || !recipient || !amount || !!recipientError || !!amountError || (selectedToken !== null && parseFloat(selectedToken.balance) === 0)}
             >
               {isSending ? (
                 <span className="sending-indicator">
@@ -361,11 +410,10 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
         </div>
       </div>
 
-      {/* QR Scanner */}
       {isQRScannerOpen && (
-        <QRScanner 
-          onScan={handleQRScan} 
-          onClose={() => setIsQRScannerOpen(false)} 
+        <QRScanner
+          onScan={handleQRScan}
+          onClose={() => setIsQRScannerOpen(false)}
         />
       )}
 
@@ -435,46 +483,6 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
           background: rgba(34, 211, 238, 0.2);
           border-color: rgba(34, 211, 238, 0.5);
           box-shadow: 0 0 12px rgba(34, 211, 238, 0.3);
-        }
-        
-        .transaction-info {
-          margin-top: 1rem;
-          padding: 1rem;
-          background: rgba(34, 211, 238, 0.1);
-          border: 1px solid rgba(34, 211, 238, 0.3);
-          border-radius: 8px;
-        }
-        
-        .transaction-info p {
-          margin: 0.5rem 0;
-          color: #22d3ee;
-        }
-        
-        .tx-hash {
-          word-break: break-all;
-          font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
-          font-size: 0.85rem;
-          margin: 0.5rem 0;
-          padding: 0.75rem;
-          background: rgba(0, 0, 0, 0.5);
-          border: 1px solid rgba(34, 211, 238, 0.2);
-          border-radius: 6px;
-          color: #22d3ee;
-        }
-        
-        .block-explorer-link {
-          display: inline-block;
-          margin-top: 0.5rem;
-          color: #22d3ee;
-          text-decoration: none;
-          font-size: 0.85rem;
-          border-bottom: 1px solid rgba(34, 211, 238, 0.5);
-          transition: all 0.2s;
-        }
-
-        .block-explorer-link:hover {
-          color: #67e8f9;
-          border-color: rgba(34, 211, 238, 0.8);
         }
 
         .modal-body {
@@ -566,75 +574,155 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
           padding-left: 0.25rem;
         }
 
-        .token-selector {
-          display: flex;
-          gap: 0.5rem;
-          flex-wrap: wrap;
+        /* Token Dropdown */
+        .token-dropdown {
+          position: relative;
         }
 
-        .token-option {
-          flex: 1;
-          min-width: 80px;
-          padding: 0.875rem 0.75rem;
+        .token-dropdown-trigger {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 0.625rem;
+          padding: 0.875rem 1rem;
           border: 1px solid rgba(34, 211, 238, 0.3);
           border-radius: 8px;
           background: rgba(0, 0, 0, 0.5);
           cursor: pointer;
           transition: all 0.2s;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 0.25rem;
+          color: #e5e7eb;
+          font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+          text-align: left;
         }
 
-        .token-option:hover:not(:disabled) {
+        .token-dropdown-trigger:hover:not(:disabled) {
           border-color: #22d3ee;
-          background: rgba(34, 211, 238, 0.1);
-          box-shadow: 0 0 12px rgba(34, 211, 238, 0.2);
+          background: rgba(34, 211, 238, 0.05);
+          box-shadow: 0 0 12px rgba(34, 211, 238, 0.15);
         }
 
-        .token-option.active {
-          border-color: #22d3ee;
-          background: rgba(34, 211, 238, 0.15);
-          box-shadow: 0 0 16px rgba(34, 211, 238, 0.3);
-        }
-
-        .token-option:disabled {
-          opacity: 0.4;
+        .token-dropdown-trigger:disabled {
+          opacity: 0.5;
           cursor: not-allowed;
         }
 
-        .token-option.no-balance {
-          opacity: 0.6;
-          border-color: rgba(107, 114, 128, 0.3);
-          background: rgba(0, 0, 0, 0.3);
+        .token-logo {
+          border-radius: 50%;
+          flex-shrink: 0;
         }
 
-        .token-option.no-balance:hover:not(:disabled) {
-          border-color: rgba(107, 114, 128, 0.5);
-          background: rgba(0, 0, 0, 0.4);
-          box-shadow: none;
-        }
-
-        .token-symbol {
+        .dropdown-symbol {
           font-weight: 700;
-          font-size: 0.9rem;
+          font-size: 0.95rem;
           color: #22d3ee;
-          font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
         }
 
-        .token-option.no-balance .token-symbol {
-          color: #6b7280;
+        .dropdown-name {
+          font-size: 0.75rem;
+          color: #9ca3af;
+          flex: 1;
         }
 
-        .token-balance-small {
-          font-size: 0.7rem;
+        .dropdown-balance {
+          font-size: 0.8rem;
           color: #9ca3af;
           font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
         }
 
-        .token-balance-small.zero-balance {
+        .dropdown-placeholder {
           color: #6b7280;
+          font-size: 0.9rem;
+        }
+
+        .dropdown-chevron {
+          margin-left: auto;
+          flex-shrink: 0;
+          color: #6b7280;
+          transition: transform 0.2s;
+        }
+
+        .dropdown-chevron.open {
+          transform: rotate(180deg);
+        }
+
+        .token-dropdown-menu {
+          position: absolute;
+          top: calc(100% + 4px);
+          left: 0;
+          right: 0;
+          z-index: 20;
+          background: rgba(10, 10, 20, 0.98);
+          border: 1px solid rgba(34, 211, 238, 0.3);
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
+        }
+
+        .token-dropdown-item {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.75rem 1rem;
+          background: transparent;
+          border: none;
+          border-bottom: 1px solid rgba(34, 211, 238, 0.1);
+          cursor: pointer;
+          transition: background 0.15s;
+          text-align: left;
+        }
+
+        .token-dropdown-item:last-child {
+          border-bottom: none;
+        }
+
+        .token-dropdown-item:hover {
+          background: rgba(34, 211, 238, 0.08);
+        }
+
+        .token-dropdown-item.selected {
+          background: rgba(34, 211, 238, 0.12);
+        }
+
+        .dropdown-item-info {
+          display: flex;
+          flex-direction: column;
+          gap: 0.125rem;
+          flex: 1;
+          min-width: 0;
+        }
+
+        .dropdown-item-symbol {
+          font-size: 0.875rem;
+          font-weight: 700;
+          color: #e5e7eb;
+          font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+        }
+
+        .dropdown-item-name {
+          font-size: 0.7rem;
+          color: #9ca3af;
+        }
+
+        .dropdown-item-balance {
+          text-align: right;
+          font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+        }
+
+        .dropdown-item-balance .has-balance {
+          font-size: 0.8rem;
+          color: #22d3ee;
+          font-weight: 600;
+        }
+
+        .dropdown-item-balance .no-balance-text {
+          font-size: 0.8rem;
+          color: #6b7280;
+        }
+
+        .check-icon {
+          color: #22d3ee;
+          flex-shrink: 0;
         }
 
         .no-tokens-message {
@@ -737,12 +825,44 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
           cursor: not-allowed;
         }
 
-        .balance-info {
-          margin-top: 0.5rem;
-          font-size: 0.75rem;
-          color: #9ca3af;
-          text-align: right;
+        .transaction-info {
+          margin-top: 1rem;
+          padding: 1rem;
+          background: rgba(34, 211, 238, 0.1);
+          border: 1px solid rgba(34, 211, 238, 0.3);
+          border-radius: 8px;
+        }
+
+        .transaction-info p {
+          margin: 0.5rem 0;
+          color: #22d3ee;
+        }
+
+        .tx-hash {
+          word-break: break-all;
           font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+          font-size: 0.85rem;
+          margin: 0.5rem 0;
+          padding: 0.75rem;
+          background: rgba(0, 0, 0, 0.5);
+          border: 1px solid rgba(34, 211, 238, 0.2);
+          border-radius: 6px;
+          color: #22d3ee;
+        }
+
+        .block-explorer-link {
+          display: inline-block;
+          margin-top: 0.5rem;
+          color: #22d3ee;
+          text-decoration: none;
+          font-size: 0.85rem;
+          border-bottom: 1px solid rgba(34, 211, 238, 0.5);
+          transition: all 0.2s;
+        }
+
+        .block-explorer-link:hover {
+          color: #67e8f9;
+          border-color: rgba(34, 211, 238, 0.8);
         }
 
         .error-message {
@@ -766,10 +886,12 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
         @media (max-width: 480px) {
           .modal-overlay {
             padding: 0.5rem;
+            align-items: flex-end;
           }
 
           .modal-container {
             max-width: 100%;
+            border-radius: 16px 16px 0 0;
           }
 
           .modal-header {
@@ -784,15 +906,10 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
             padding: 1rem;
             flex-direction: column;
           }
-
-          .token-option {
-            min-width: 70px;
-            padding: 0.75rem 0.5rem;
-          }
         }
       `}</style>
     </div>
   );
 };
 
-export default SendTokenModal; 
+export default SendTokenModal;

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { QrReader } from 'react-qr-reader';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { Html5Qrcode } from 'html5-qrcode';
 
 export interface QRScannerProps {
   onScan: (data: string) => void;
@@ -22,6 +22,9 @@ const THEME_COLORS = {
   },
 };
 
+// Unique ID per mount to avoid conflicts if multiple scanners exist
+let scannerInstanceCount = 0;
+
 const QRScanner: React.FC<QRScannerProps> = ({
   onScan,
   onClose,
@@ -33,35 +36,66 @@ const QRScanner: React.FC<QRScannerProps> = ({
 }) => {
   const [error, setError] = useState<string | null>(null);
   const [scanCount, setScanCount] = useState(0);
-  const [lastScanned, setLastScanned] = useState<string | null>(null);
+  const [cameraReady, setCameraReady] = useState(false);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const containerIdRef = useRef<string>(`qr-scanner-${++scannerInstanceCount}`);
+  const lastScannedRef = useRef<string | null>(null);
 
   const colors = THEME_COLORS[theme];
 
-  const handleScan = (result: any) => {
-    if (result) {
-      const scannedText = result?.text;
+  const handleScanSuccess = useCallback((decodedText: string) => {
+    if (decodedText === lastScannedRef.current) return;
+    lastScannedRef.current = decodedText;
+    setScanCount(prev => prev + 1);
 
-      if (scannedText && scannedText !== lastScanned) {
-        setLastScanned(scannedText);
-        setScanCount(prev => prev + 1);
-
-        // Run custom validator if provided
-        if (validator) {
-          const validation = validator(scannedText);
-          if (!validation.valid) {
-            setError(validation.error || 'Invalid QR code');
-            setTimeout(() => setError(null), 3000);
-            return;
-          }
-        }
-
-        setError(null);
-        onScan(scannedText);
+    if (validator) {
+      const validation = validator(decodedText);
+      if (!validation.valid) {
+        setError(validation.error || 'Invalid QR code');
+        setTimeout(() => {
+          setError(null);
+          lastScannedRef.current = null;
+        }, 3000);
+        return;
       }
     }
-  };
 
-  
+    setError(null);
+    onScan(decodedText);
+  }, [validator, onScan]);
+
+  useEffect(() => {
+    const containerId = containerIdRef.current;
+    const scanner = new Html5Qrcode(containerId, { verbose: false });
+    scannerRef.current = scanner;
+
+    scanner
+      .start(
+        { facingMode: 'environment' },
+        {
+          fps: 15,
+          qrbox: { width: 240, height: 240 },
+          aspectRatio: 1.0,
+          disableFlip: false,
+        },
+        handleScanSuccess,
+        () => { /* per-frame errors are normal — ignore */ }
+      )
+      .then(() => setCameraReady(true))
+      .catch(() => {
+        setError('Camera access denied. Please allow camera permissions and try again.');
+      });
+
+    return () => {
+      if (scannerRef.current) {
+        scannerRef.current.isScanning
+          ? scannerRef.current.stop().catch(() => {})
+          : Promise.resolve();
+        scannerRef.current = null;
+      }
+    };
+  }, [handleScanSuccess]);
+
   return (
     <div className="qr-scanner-overlay">
       <div className="qr-scanner-container">
@@ -70,23 +104,35 @@ const QRScanner: React.FC<QRScannerProps> = ({
           <button className="close-button" onClick={onClose}>×</button>
         </div>
 
-        <div className="qr-reader">
-          <QrReader
-            constraints={{ facingMode: 'environment' }}
-            onResult={handleScan}
-            scanDelay={500}
-          />
+        <div className="qr-reader-wrapper">
+          {/* html5-qrcode injects video into this div */}
+          <div id={containerIdRef.current} className="qr-reader-inner" />
+
+          {/* Scan frame overlay */}
+          {cameraReady && (
+            <div className="scan-frame-overlay">
+              <div className="scan-frame">
+                <span className="corner tl" />
+                <span className="corner tr" />
+                <span className="corner bl" />
+                <span className="corner br" />
+                <div className="scan-line" />
+              </div>
+            </div>
+          )}
+
+          {!cameraReady && !error && (
+            <div className="camera-loading">
+              <div className="loading-spinner" />
+              <span>Starting camera…</span>
+            </div>
+          )}
         </div>
 
         {error && (
           <div className="error-message">
             {error}
-            <button
-              onClick={() => setError(null)}
-              className="error-close-btn"
-            >
-              ×
-            </button>
+            <button onClick={() => setError(null)} className="error-close-btn">×</button>
           </div>
         )}
 
@@ -120,7 +166,7 @@ const QRScanner: React.FC<QRScannerProps> = ({
 
         .qr-scanner-container {
           width: 100%;
-          max-width: 600px;
+          max-width: 420px;
           background: linear-gradient(135deg, rgba(10, 10, 20, 0.95), rgba(0, 0, 0, 0.98));
           border: 1px solid rgba(${colors.primaryRgb}, 0.3);
           border-radius: 16px;
@@ -170,61 +216,124 @@ const QRScanner: React.FC<QRScannerProps> = ({
           box-shadow: 0 0 12px rgba(${colors.primaryRgb}, 0.3);
         }
 
-        .qr-reader {
+        /* Wrapper holds both the html5-qrcode element and our overlay */
+        .qr-reader-wrapper {
           position: relative;
           width: 100%;
-          overflow: hidden;
           background: #000;
+          aspect-ratio: 1 / 1;
+          overflow: hidden;
         }
 
-        .qr-reader > div {
-          position: relative !important;
+        /* html5-qrcode injects its own video + canvas inside this div */
+        .qr-reader-inner {
           width: 100%;
-          height: auto;
+          height: 100%;
         }
 
-        .qr-reader video {
-          width: 100%;
-          height: auto;
-          display: block;
-          object-fit: cover;
+        /* Force the injected video to fill the wrapper */
+        :global(#${containerIdRef.current} video) {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+          display: block !important;
         }
 
-        @media (min-width: 768px) {
-          .qr-reader {
-            aspect-ratio: 16 / 9;
-            max-height: 60vh;
-          }
-
-          .qr-reader video {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-          }
+        /* Hide html5-qrcode's built-in scan region box — we use our own */
+        :global(#${containerIdRef.current} div[style*="border"]) {
+          display: none !important;
         }
 
-        @media (max-width: 767px) {
-          .qr-reader {
-            aspect-ratio: 4 / 3;
-            min-height: 300px;
-          }
+        /* Scan frame overlay — sits on top of the video */
+        .scan-frame-overlay {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          pointer-events: none;
+          background:
+            linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 30%),
+            linear-gradient(to top,    rgba(0,0,0,0.55) 0%, transparent 30%),
+            linear-gradient(to right,  rgba(0,0,0,0.55) 0%, transparent 30%),
+            linear-gradient(to left,   rgba(0,0,0,0.55) 0%, transparent 30%);
+        }
 
-          .qr-reader video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-          }
+        .scan-frame {
+          position: relative;
+          width: 240px;
+          height: 240px;
+        }
+
+        /* Corner markers */
+        .corner {
+          position: absolute;
+          width: 22px;
+          height: 22px;
+          border-color: ${colors.primary};
+          border-style: solid;
+        }
+
+        .corner.tl { top: 0; left: 0;  border-width: 3px 0 0 3px; border-radius: 3px 0 0 0; }
+        .corner.tr { top: 0; right: 0; border-width: 3px 3px 0 0; border-radius: 0 3px 0 0; }
+        .corner.bl { bottom: 0; left: 0;  border-width: 0 0 3px 3px; border-radius: 0 0 0 3px; }
+        .corner.br { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 3px 0; }
+
+        /* Animated scan line */
+        .scan-line {
+          position: absolute;
+          left: 3px;
+          right: 3px;
+          height: 2px;
+          background: linear-gradient(90deg, transparent, ${colors.primary}, transparent);
+          box-shadow: 0 0 8px ${colors.primary};
+          animation: scan 2s ease-in-out infinite;
+        }
+
+        @keyframes scan {
+          0%   { top: 3px;   opacity: 1; }
+          50%  { top: calc(100% - 5px); opacity: 1; }
+          100% { top: 3px;   opacity: 1; }
+        }
+
+        /* Camera loading state */
+        .camera-loading {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 1rem;
+          color: #9ca3af;
+          font-size: 0.8rem;
+          font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+          background: rgba(0, 0, 0, 0.8);
+        }
+
+        .loading-spinner {
+          width: 36px;
+          height: 36px;
+          border: 3px solid rgba(${colors.primaryRgb}, 0.2);
+          border-top-color: ${colors.primary};
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
         }
 
         .scanner-help {
           text-align: center;
-          padding: 1rem;
+          padding: 0.875rem 1rem;
           color: #9ca3af;
-          font-size: 0.8rem;
+          font-size: 0.78rem;
           margin: 0;
           font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
           text-transform: uppercase;
           letter-spacing: 0.05em;
+          border-top: 1px solid rgba(${colors.primaryRgb}, 0.15);
         }
 
         .error-message {
@@ -232,30 +341,31 @@ const QRScanner: React.FC<QRScannerProps> = ({
           border: 1px solid rgba(239, 68, 68, 0.3);
           color: #ef4444;
           padding: 0.75rem 1rem;
-          margin: 0.5rem 1rem;
+          margin: 0.75rem;
           text-align: center;
-          font-size: 0.85rem;
+          font-size: 0.82rem;
           font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
           border-radius: 6px;
           display: flex;
           align-items: center;
           justify-content: center;
+          gap: 0.5rem;
         }
 
         .error-close-btn {
-          margin-left: 0.5rem;
           font-size: 1.2rem;
           cursor: pointer;
           background: transparent;
           border: none;
           color: #ef4444;
+          line-height: 1;
         }
 
         .scan-success {
           background: rgba(34, 197, 94, 0.1);
           border: 1px solid rgba(34, 197, 94, 0.3);
           padding: 0.5rem 1rem;
-          margin: 0.5rem 1rem;
+          margin: 0.5rem 0.75rem;
           border-radius: 6px;
           text-align: center;
         }
@@ -278,9 +388,7 @@ const QRScanner: React.FC<QRScannerProps> = ({
           }
 
           .qr-scanner-container {
-            width: 100%;
             max-width: 100%;
-            margin: 0;
             border-radius: 12px;
           }
 
@@ -292,8 +400,9 @@ const QRScanner: React.FC<QRScannerProps> = ({
             font-size: 0.9rem;
           }
 
-          .qr-reader {
-            min-height: 300px;
+          .scan-frame {
+            width: 200px;
+            height: 200px;
           }
 
           .scanner-help {
@@ -304,12 +413,6 @@ const QRScanner: React.FC<QRScannerProps> = ({
           .error-message {
             font-size: 0.75rem;
             padding: 0.625rem 0.875rem;
-          }
-        }
-
-        @media (min-width: 768px) {
-          .qr-scanner-container {
-            max-width: 700px;
           }
         }
       `}</style>

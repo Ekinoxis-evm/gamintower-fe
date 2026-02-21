@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { formatUnits } from 'viem';
+import { QRCodeSVG } from 'qrcode.react';
 import { VaultInfo } from '../../types/index';
 import { getTokenMetaByAddress } from '../../utils/tokenUtils';
 import { useVaultSubmissions } from '../../hooks/challenges/useVaultSubmissions';
@@ -63,6 +64,7 @@ interface ChallengeCardProps {
 
 const ChallengeCard: React.FC<ChallengeCardProps> = ({ vault, userAddress, chainId, onJoin, onSubmit }) => {
   const [expanded, setExpanded] = useState(false);
+  const [showQR, setShowQR] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isResolving, setIsResolving] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
@@ -185,16 +187,34 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({ vault, userAddress, chain
 
         {/* Awaiting opponent banner */}
         {vault.state === 0 && userIsPlayer1Only && (
-          <div className="mt-2 pt-2 border-t border-slate-700">
+          <div className="mt-2 pt-2 border-t border-slate-700 space-y-2">
             <p className="text-xs text-yellow-400/80 bg-yellow-400/5 border border-yellow-400/20 rounded-lg px-3 py-2">
-              Waiting for an opponent to join. Share the vault address below.
+              Waiting for an opponent to join. Share the vault address or QR below.
             </p>
-            <button
-              onClick={handleCopyAddress}
-              className="mt-2 w-full text-xs font-mono bg-slate-800 hover:bg-slate-700 border border-slate-600 text-gray-300 rounded-lg px-3 py-2 text-left truncate transition-colors"
-            >
-              {copied ? '✓ Copied!' : vault.address}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleCopyAddress}
+                className="flex-1 text-xs font-mono bg-slate-800 hover:bg-slate-700 border border-slate-600 text-gray-300 rounded-lg px-3 py-2 text-left truncate transition-colors"
+              >
+                {copied ? '✓ Copied!' : vault.address}
+              </button>
+              <button
+                onClick={() => setShowQR(!showQR)}
+                title="Show QR code"
+                className="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-gray-300 rounded-lg transition-colors text-sm"
+              >
+                {showQR ? '✕' : '⬛'}
+              </button>
+            </div>
+            {showQR && (
+              <div className="flex flex-col items-center gap-2 bg-slate-800 border border-slate-600 rounded-xl p-4">
+                <p className="text-xs text-gray-400 uppercase tracking-wider">Scan to join challenge</p>
+                <div className="bg-white p-3 rounded-lg">
+                  <QRCodeSVG value={vault.address} size={160} />
+                </div>
+                <p className="text-xs text-gray-500 font-mono break-all text-center">{vault.address}</p>
+              </div>
+            )}
           </div>
         )}
 

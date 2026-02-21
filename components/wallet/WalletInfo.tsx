@@ -10,6 +10,7 @@ import { parseUnits, encodeFunctionData } from 'viem';
 import { base, mainnet, optimism } from 'viem/chains';
 import { useTokenPrices } from '../../hooks/useTokenPrices';
 import { getTokenAddresses } from '../../utils/network';
+import { ONEUP_TOKEN_ADDRESS } from '../../config/constants';
 import ReceiveModal from './ReceiveModal';
 import { useUserNFTs } from '../../hooks/useUserNFTs';
 import { NFTCard } from './NFTCard';
@@ -159,22 +160,24 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
   // Get token addresses based on chain (using centralized config)
   const getTokenAddress = (tokenSymbol: string): string | null => {
     if (tokenSymbol === 'ETH') return null; // Native token
+    if (tokenSymbol === '1UP') return chainId === 8453 ? ONEUP_TOKEN_ADDRESS : null;
     if (!chainId) return null;
-    
+
     // Use centralized token addresses from utils/network
     const tokenAddresses = getTokenAddresses(chainId);
     const address = tokenAddresses[tokenSymbol as keyof typeof tokenAddresses];
-    
+
     // Return null if token not available on this chain (empty string)
     return address && address.trim() !== '' ? address : null;
   };
 
-  // Prepare available tokens for SendTokenModal - show all 4 tokens regardless of balance
+  // Prepare available tokens for SendTokenModal
   const availableTokens = [
     { symbol: 'ETH', balance: balances.ethBalance, name: 'Ethereum' },
     { symbol: 'USDC', balance: balances.uscBalance, name: 'USD Coin' },
     { symbol: 'USDT', balance: balances.usdtBalance || '0', name: 'Tether USD' },
     { symbol: 'EURC', balance: balances.eurcBalance || '0', name: 'Euro Coin' },
+    ...(chainId === 8453 ? [{ symbol: '1UP', balance: oneUpBalance, name: '1UP Token' }] : []),
   ];
 
   // Handle opening the send token modal

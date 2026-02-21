@@ -83,6 +83,8 @@ export function getTokenLogoUrl(tokenSymbol: string): string {
       return `${COINGECKO_IMAGE_URL}/26045/large/euro-coin.png`;
     case 'USDT':
       return `${COINGECKO_IMAGE_URL}/325/large/Tether.png`;
+    case '1UP':
+      return '/tokens/1up.png';
     default:
       return FALLBACK_IMAGES[symbol] || FALLBACK_IMAGES.DEFAULT;
   }
