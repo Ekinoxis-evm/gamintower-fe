@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import Image from 'next/image';
-
+import { QRCodeSVG } from 'qrcode.react';
 import { logger } from '../../utils/logger';
 interface ReceiveModalProps {
   address: string;
@@ -11,8 +10,6 @@ interface ReceiveModalProps {
 const ReceiveModal: React.FC<ReceiveModalProps> = ({ address, onClose, onScanQR }) => {
   const [copied, setCopied] = useState(false);
 
-  // Generate QR code URL with dark cypherpunk style (dark bg, cyan/neon color)
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${address}&bgcolor=0a0a0a&color=22d3ee&margin=1`;
 
   const handleCopy = async () => {
     try {
@@ -52,17 +49,15 @@ const ReceiveModal: React.FC<ReceiveModalProps> = ({ address, onClose, onScanQR 
         </div>
 
         <div className="modal-body">
-          {/* QR Code - Cypherpunk Style */}
+          {/* QR Code */}
           <div className="qr-section">
             <div className="qr-wrapper">
-              <Image 
-                src={qrCodeUrl} 
-                alt="Wallet QR Code" 
-                width={250}
-                height={250}
-                className="qr-image"
-                priority
-                unoptimized
+              <QRCodeSVG
+                value={address}
+                size={220}
+                fgColor="#000000"
+                bgColor="#ffffff"
+                level="M"
               />
             </div>
             <p className="qr-hint">SCAN TO SEND</p>
@@ -177,20 +172,12 @@ const ReceiveModal: React.FC<ReceiveModalProps> = ({ address, onClose, onScanQR 
         }
 
         .qr-wrapper {
-          background: #0a0a0a;
+          background: #ffffff;
           padding: 1rem;
           border: 2px solid rgba(34, 211, 238, 0.4);
           border-radius: 8px;
           display: inline-block;
-          box-shadow: 
-            0 0 20px rgba(34, 211, 238, 0.2),
-            inset 0 0 20px rgba(34, 211, 238, 0.05);
-        }
-
-        .qr-image {
-          display: block;
-          width: 250px;
-          height: 250px;
+          box-shadow: 0 0 20px rgba(34, 211, 238, 0.2);
         }
 
         .qr-hint {

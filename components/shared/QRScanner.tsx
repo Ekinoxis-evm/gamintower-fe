@@ -6,7 +6,7 @@ export interface QRScannerProps {
   onClose: () => void;
   title?: string;
   description?: string;
-  validator?: (data: string) => { valid: boolean; error?: string };
+  validator?: (data: string) => { valid: boolean; error?: string; data?: string };
   theme?: 'cyan' | 'amber';
   showScanCount?: boolean;
 }
@@ -58,6 +58,10 @@ const QRScanner: React.FC<QRScannerProps> = ({
         }, 3000);
         return;
       }
+      // Use normalized data if validator extracted it (e.g. from ethereum: URIs)
+      setError(null);
+      onScan(validation.data ?? decodedText);
+      return;
     }
 
     setError(null);
@@ -424,9 +428,19 @@ export default QRScanner;
 
 // Validators for common use cases
 export const ethereumAddressValidator = (data: string) => {
+  // Strip whitespace and extract raw address from common URI formats:
+  // - plain:       0x1234...
+  // - EIP-681:     ethereum:0x1234...
+  // - EIP-681+chain: ethereum:0x1234...@8453/...
+  const trimmed = data.trim();
   const ethAddressRegex = /^0x[a-fA-F0-9]{40}$/;
-  if (ethAddressRegex.test(data)) {
-    return { valid: true };
+
+  // Try to extract address from ethereum: URI
+  const uriMatch = trimmed.match(/^ethereum:(0x[a-fA-F0-9]{40})/i);
+  const address = uriMatch ? uriMatch[1] : trimmed;
+
+  if (ethAddressRegex.test(address)) {
+    return { valid: true, data: address };
   }
   return { valid: false, error: 'Invalid Ethereum address QR code. Please scan a valid wallet address.' };
 };
