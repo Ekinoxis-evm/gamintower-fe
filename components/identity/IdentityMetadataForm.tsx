@@ -33,6 +33,7 @@ function SocialInput({
   icon,
   prefix,
   type = 'text',
+  hint,
 }: {
   label: string;
   value: string;
@@ -41,12 +42,13 @@ function SocialInput({
   icon: React.ReactNode;
   prefix?: string;
   type?: string;
+  hint?: string;
 }) {
   return (
     <div>
       <label className="text-xs text-gray-400 block mb-1.5">{label}</label>
-      <div className="flex items-center bg-slate-800 border border-slate-600 rounded-lg overflow-hidden focus-within:border-cyan-500 transition-colors">
-        <div className="flex items-center gap-2 pl-3 text-gray-500 flex-shrink-0">
+      <div className="flex items-center bg-slate-800 border border-slate-600 rounded-xl overflow-hidden focus-within:border-cyan-500 transition-colors">
+        <div className="flex items-center gap-2 pl-3 text-slate-400 flex-shrink-0">
           {icon}
           {prefix && <span className="text-gray-500 text-sm select-none">{prefix}</span>}
         </div>
@@ -58,6 +60,9 @@ function SocialInput({
           className="flex-1 bg-transparent text-white text-sm px-2 py-2.5 focus:outline-none placeholder-gray-600 min-w-0"
         />
       </div>
+      {hint && (
+        <p className="text-[11px] text-slate-500 mt-1 truncate">{hint}</p>
+      )}
     </div>
   );
 }
@@ -330,6 +335,12 @@ const IdentityMetadataForm: React.FC<IdentityMetadataFormProps> = ({ onComplete,
           maxLength={64}
           className="w-full bg-slate-800 border border-slate-600 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-cyan-500 placeholder-gray-600 transition-colors"
         />
+        <div className="flex justify-between mt-1">
+          <span />
+          <span className={`text-[11px] ${name.length > 54 ? 'text-amber-400' : 'text-slate-600'}`}>
+            {name.length}/64
+          </span>
+        </div>
       </div>
 
       {/* Optional social fields */}
@@ -343,6 +354,7 @@ const IdentityMetadataForm: React.FC<IdentityMetadataFormProps> = ({ onComplete,
           placeholder="yourhandle"
           prefix="@"
           icon={<IconInstagram />}
+          hint={instagram ? `→ https://www.instagram.com/${instagram.replace(/^@/, '')}` : undefined}
         />
 
         <SocialInput
@@ -351,6 +363,7 @@ const IdentityMetadataForm: React.FC<IdentityMetadataFormProps> = ({ onComplete,
           onChange={setDiscord}
           placeholder="username or username#1234"
           icon={<IconDiscord />}
+          hint={discord ? 'No public link — username displayed only' : undefined}
         />
 
         <SocialInput
@@ -360,6 +373,7 @@ const IdentityMetadataForm: React.FC<IdentityMetadataFormProps> = ({ onComplete,
           placeholder="yourhandle"
           prefix="@"
           icon={<IconTelegram />}
+          hint={telegram ? `→ https://t.me/${telegram.replace(/^@/, '')}` : undefined}
         />
 
         <SocialInput
@@ -369,6 +383,7 @@ const IdentityMetadataForm: React.FC<IdentityMetadataFormProps> = ({ onComplete,
           placeholder="yourhandle"
           prefix="@"
           icon={<IconTikTok />}
+          hint={tiktok ? `→ https://www.tiktok.com/@${tiktok.replace(/^@/, '')}` : undefined}
         />
 
         <SocialInput
@@ -378,6 +393,7 @@ const IdentityMetadataForm: React.FC<IdentityMetadataFormProps> = ({ onComplete,
           placeholder="https://yoursite.com"
           type="url"
           icon={<IconGlobe />}
+          hint={website ? `→ ${website}` : undefined}
         />
       </div>
 

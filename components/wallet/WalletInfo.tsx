@@ -690,8 +690,9 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
       {/* Send Token Modal */}
       {isSendModalOpen && (
         <SendTokenModal
-          onClose={() => setIsSendModalOpen(false)}
+          onClose={() => { setIsSendModalOpen(false); setTxHash(null); }}
           onSend={handleSendToken}
+          onSendAnother={() => setTxHash(null)}
           availableTokens={availableTokens}
           isSending={isSendingTx}
           txHash={txHash}

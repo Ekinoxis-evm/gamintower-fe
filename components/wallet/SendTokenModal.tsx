@@ -14,6 +14,7 @@ interface TokenOption {
 interface SendTokenModalProps {
   onClose: () => void;
   onSend: (recipient: string, amount: string, tokenType: string) => Promise<void>;
+  onSendAnother: () => void;
   availableTokens: TokenOption[];
   isSending: boolean;
   txHash?: string | null;
@@ -24,6 +25,7 @@ interface SendTokenModalProps {
 const SendTokenModal: React.FC<SendTokenModalProps> = ({
   onClose,
   onSend,
+  onSendAnother,
   availableTokens,
   isSending,
   txHash = null,
@@ -148,9 +150,6 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
     setAmountError('');
     try {
       await onSend(recipient, amount, selectedToken.symbol);
-      if (!txHash) {
-        handleClose();
-      }
     } catch (err: any) {
       setError(err.message || 'Failed to send transaction');
     }
@@ -190,6 +189,72 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
     setIsQRScannerOpen(false);
     setError('');
   };
+
+  // Success screen shown after tx is submitted
+  if (txHash) {
+    const shortHash = `${txHash.slice(0, 10)}...${txHash.slice(-8)}`;
+    return (
+      <div className="modal-overlay">
+        <div className="modal-container">
+          <div className="modal-header">
+            <h3>Transaction Sent</h3>
+            <button onClick={handleClose} className="close-button">&times;</button>
+          </div>
+
+          <div className="success-body">
+            <div className="success-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="success-svg">
+                <circle cx="12" cy="12" r="10" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7 13l3.5 3.5L17 9" />
+              </svg>
+            </div>
+            <p className="success-title">Transfer submitted</p>
+            <p className="success-subtitle">Your transaction is being processed on the network</p>
+
+            <div className="tx-box">
+              <span className="tx-box-label">TX Hash</span>
+              <code className="tx-box-hash">{shortHash}</code>
+            </div>
+
+            {explorerBase && (
+              <a
+                href={`${explorerBase}/tx/${txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="explorer-link"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
+                  <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" y1="14" x2="21" y2="3" />
+                </svg>
+                View on Explorer
+              </a>
+            )}
+          </div>
+
+          <div className="success-footer">
+            <button className="btn-secondary" onClick={handleClose}>
+              Close
+            </button>
+            <button
+              className="btn-primary"
+              onClick={() => {
+                setRecipient('');
+                setAmount('');
+                setError('');
+                setAmountError('');
+                setRecipientError('');
+                onSendAnother();
+              }}
+            >
+              Send Another
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="modal-overlay">
@@ -363,23 +428,6 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
           </div>
 
           {error && <div className="error-message">{error}</div>}
-
-          {txHash && (
-            <div className="transaction-info">
-              <p><strong>Transaction sent!</strong></p>
-              <p className="tx-hash">{txHash}</p>
-              {explorerBase && (
-                <a
-                  href={`${explorerBase}/tx/${txHash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block-explorer-link"
-                >
-                  View on Explorer
-                </a>
-              )}
-            </div>
-          )}
         </div>
 
         <div className="modal-footer">
@@ -388,25 +436,23 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
             variant="secondary"
             disabled={isSending}
           >
-            {txHash ? 'Close' : 'Cancel'}
+            Cancel
           </Button>
-          {!txHash && (
-            <Button
-              onClick={handleSend}
-              variant="primary"
-              disabled={isSending || !selectedToken || !recipient || !amount || !!recipientError || !!amountError || (selectedToken !== null && parseFloat(selectedToken.balance) === 0)}
-            >
-              {isSending ? (
-                <span className="sending-indicator">
-                  <Loading size="small" text="" /> Sending...
-                </span>
-              ) : selectedToken && parseFloat(selectedToken.balance) === 0 ? (
-                `No ${selectedToken.symbol} Balance`
-              ) : (
-                selectedToken ? `Send ${selectedToken.symbol}` : 'No Token Selected'
-              )}
-            </Button>
-          )}
+          <Button
+            onClick={handleSend}
+            variant="primary"
+            disabled={isSending || !selectedToken || !recipient || !amount || !!recipientError || !!amountError || (selectedToken !== null && parseFloat(selectedToken.balance) === 0)}
+          >
+            {isSending ? (
+              <span className="sending-indicator">
+                <Loading size="small" text="" /> Sending...
+              </span>
+            ) : selectedToken && parseFloat(selectedToken.balance) === 0 ? (
+              `No ${selectedToken.symbol} Balance`
+            ) : (
+              selectedToken ? `Send ${selectedToken.symbol}` : 'No Token Selected'
+            )}
+          </Button>
         </div>
       </div>
 
@@ -883,6 +929,137 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
           gap: 0.5rem;
         }
 
+        /* Success screen */
+        .success-body {
+          padding: 2rem 1.5rem 1.5rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          gap: 0.75rem;
+        }
+
+        .success-icon-wrap {
+          width: 64px;
+          height: 64px;
+          border-radius: 50%;
+          background: rgba(34, 197, 94, 0.15);
+          border: 2px solid rgba(34, 197, 94, 0.4);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 0.25rem;
+        }
+
+        .success-svg {
+          width: 32px;
+          height: 32px;
+          stroke: #4ade80;
+        }
+
+        .success-title {
+          margin: 0;
+          font-size: 1.125rem;
+          font-weight: 700;
+          color: #e5e7eb;
+        }
+
+        .success-subtitle {
+          margin: 0;
+          font-size: 0.8rem;
+          color: #6b7280;
+        }
+
+        .tx-box {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          gap: 0.375rem;
+          padding: 0.875rem 1rem;
+          background: rgba(0, 0, 0, 0.4);
+          border: 1px solid rgba(34, 211, 238, 0.2);
+          border-radius: 8px;
+          margin-top: 0.5rem;
+        }
+
+        .tx-box-label {
+          font-size: 0.6875rem;
+          font-weight: 600;
+          color: #6b7280;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+        }
+
+        .tx-box-hash {
+          font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+          font-size: 0.8rem;
+          color: #22d3ee;
+          word-break: break-all;
+        }
+
+        .explorer-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.375rem;
+          font-size: 0.8125rem;
+          color: #22d3ee;
+          text-decoration: none;
+          border-bottom: 1px solid rgba(34, 211, 238, 0.4);
+          padding-bottom: 1px;
+          transition: all 0.2s;
+        }
+
+        .explorer-link:hover {
+          color: #67e8f9;
+          border-color: rgba(34, 211, 238, 0.8);
+        }
+
+        .success-footer {
+          padding: 1rem 1.5rem;
+          display: flex;
+          gap: 0.75rem;
+          border-top: 1px solid rgba(34, 211, 238, 0.15);
+        }
+
+        .btn-secondary {
+          flex: 1;
+          padding: 0.75rem 1rem;
+          background: rgba(55, 65, 81, 0.4);
+          border: 1px solid rgba(75, 85, 99, 0.5);
+          border-radius: 8px;
+          color: #9ca3af;
+          font-size: 0.875rem;
+          font-weight: 600;
+          font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+          background: rgba(75, 85, 99, 0.5);
+          color: #e5e7eb;
+        }
+
+        .btn-primary {
+          flex: 1;
+          padding: 0.75rem 1rem;
+          background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.2));
+          border: 1px solid rgba(34, 211, 238, 0.4);
+          border-radius: 8px;
+          color: #22d3ee;
+          font-size: 0.875rem;
+          font-weight: 700;
+          font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+          background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(139, 92, 246, 0.3));
+          border-color: rgba(34, 211, 238, 0.6);
+          box-shadow: 0 0 16px rgba(34, 211, 238, 0.2);
+        }
+
         @media (max-width: 480px) {
           .modal-overlay {
             padding: 0.5rem;
@@ -905,6 +1082,10 @@ const SendTokenModal: React.FC<SendTokenModalProps> = ({
           .modal-footer {
             padding: 1rem;
             flex-direction: column;
+          }
+
+          .success-footer {
+            padding: 1rem;
           }
         }
       `}</style>
