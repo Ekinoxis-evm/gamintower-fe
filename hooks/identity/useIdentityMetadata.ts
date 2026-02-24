@@ -1,17 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { createPublicClient, http } from 'viem';
 import type { Abi } from 'viem';
-import { base, baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 import { getChainRpc } from '../../config/networks';
 import { resolveIpfsUrl } from '../../utils/ipfs';
 import IdentityNFT_JSON from '../../frontend/deployments/abi/IdentityNFT.json';
 
 const IdentityNFT_ABI = IdentityNFT_JSON as unknown as Abi;
-
-const getViemChain = (chainId: number) => {
-  if (chainId === 84532) return baseSepolia;
-  return base;
-};
 
 export interface NFTAttribute {
   trait_type: string;
@@ -41,7 +36,7 @@ export function useIdentityMetadata(
       if (!collectionAddress || tokenId === undefined || tokenId === BigInt(0)) return null;
 
       const client = createPublicClient({
-        chain: getViemChain(chainId),
+        chain: base,
         transport: http(getChainRpc(chainId)),
       });
 

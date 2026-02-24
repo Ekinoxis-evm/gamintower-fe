@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useRouter } from 'next/router';
 import Loading from '../components/shared/Loading';
@@ -10,7 +10,7 @@ import { useIsAdmin } from '../hooks/useIsAdmin';
 export default function ChallengesPage() {
   const router = useRouter();
   const { ready, authenticated, user } = usePrivy();
-  const [chainId] = useState(8453);
+  const chainId = 8453;
   const { data: isAdmin } = useIsAdmin(chainId);
 
   React.useEffect(() => {
@@ -26,7 +26,7 @@ export default function ChallengesPage() {
 
   return (
     <div className="min-h-screen bg-gray-950">
-      <Navigation currentChainId={chainId} />
+      <Navigation />
 
       <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
         <div>

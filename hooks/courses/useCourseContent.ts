@@ -1,13 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { createPublicClient, http } from 'viem';
-import { base, baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 import { getChainRpc } from '../../config/networks';
 import CourseNFT_ABI from '../../frontend/deployments/abi/CourseNFT.json';
-
-const getViemChain = (chainId: number) => {
-  if (chainId === 84532) return baseSepolia;
-  return base;
-};
 
 export function useCourseContent(
   courseAddress: `0x${string}` | undefined,
@@ -20,7 +15,7 @@ export function useCourseContent(
       if (!courseAddress || tokenId === undefined) return null;
 
       const client = createPublicClient({
-        chain: getViemChain(chainId),
+        chain: base,
         transport: http(getChainRpc(chainId)),
       });
 

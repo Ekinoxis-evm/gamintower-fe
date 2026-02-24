@@ -62,28 +62,6 @@ export const BASE: Network = {
   color: NETWORK_COLORS[CHAIN_IDS.BASE],
 };
 
-export const OPTIMISM: Network = {
-  id: CHAIN_IDS.OPTIMISM,
-  name: 'Optimism Mainnet',
-  shortName: NETWORK_NAMES[CHAIN_IDS.OPTIMISM],
-  icon: getNetworkLogoUrl(CHAIN_IDS.OPTIMISM),
-  explorerUrl: EXPLORER_URLS[CHAIN_IDS.OPTIMISM],
-  rpcUrl: getRpcUrl(CHAIN_IDS.OPTIMISM),
-  testnet: false,
-  color: NETWORK_COLORS[CHAIN_IDS.OPTIMISM],
-};
-
-export const UNICHAIN: Network = {
-  id: CHAIN_IDS.UNICHAIN,
-  name: 'Unichain Mainnet',
-  shortName: NETWORK_NAMES[CHAIN_IDS.UNICHAIN],
-  icon: getNetworkLogoUrl(CHAIN_IDS.UNICHAIN),
-  explorerUrl: EXPLORER_URLS[CHAIN_IDS.UNICHAIN],
-  rpcUrl: getRpcUrl(CHAIN_IDS.UNICHAIN),
-  testnet: false,
-  color: NETWORK_COLORS[CHAIN_IDS.UNICHAIN],
-};
-
 export const BASE_SEPOLIA_NETWORK: Network = {
   id: CHAIN_IDS.BASE_SEPOLIA,
   name: 'Base Sepolia',
@@ -99,8 +77,6 @@ export const BASE_SEPOLIA_NETWORK: Network = {
 const NETWORKS: Record<ChainId, Network> = {
   [CHAIN_IDS.ETHEREUM]: ETHEREUM,
   [CHAIN_IDS.BASE]: BASE,
-  [CHAIN_IDS.OPTIMISM]: OPTIMISM,
-  [CHAIN_IDS.UNICHAIN]: UNICHAIN,
   [CHAIN_IDS.BASE_SEPOLIA]: BASE_SEPOLIA_NETWORK,
 };
 
@@ -173,36 +149,6 @@ export const TOKENS: Record<number, Record<string, TokenConfig>> = {
       decimals: 6,
       address: TOKEN_ADDRESSES[CHAIN_IDS.BASE].EURC,
       icon: getTokenLogoUrl('EURC'),
-    },
-  },
-  [CHAIN_IDS.OPTIMISM]: {
-    ETH: {
-      symbol: 'ETH',
-      name: 'Ethereum',
-      decimals: 18,
-      icon: getTokenLogoUrl('ETH'),
-    },
-    USDC: {
-      symbol: 'USDC',
-      name: 'USD Coin',
-      decimals: 6,
-      address: TOKEN_ADDRESSES[CHAIN_IDS.OPTIMISM].USDC,
-      icon: getTokenLogoUrl('USDC'),
-    },
-  },
-  [CHAIN_IDS.UNICHAIN]: {
-    ETH: {
-      symbol: 'ETH',
-      name: 'Ethereum',
-      decimals: 18,
-      icon: getTokenLogoUrl('ETH'),
-    },
-    USDC: {
-      symbol: 'USDC',
-      name: 'USD Coin',
-      decimals: 6,
-      address: TOKEN_ADDRESSES[CHAIN_IDS.UNICHAIN].USDC,
-      icon: getTokenLogoUrl('USDC'),
     },
   },
 };

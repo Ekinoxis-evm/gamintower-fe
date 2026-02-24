@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useRouter } from 'next/router';
 import Layout from '../components/shared/Layout';
@@ -13,7 +13,7 @@ export default function WalletPage() {
   const router = useRouter();
   const { ready, authenticated } = usePrivy();
   const { wallet: activeWallet } = useActiveWallet();
-  const [currentChainId, setCurrentChainId] = useState(8453); // Default to Base
+  const chainId = 8453;
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -24,13 +24,13 @@ export default function WalletPage() {
 
   // Use the active wallet (prioritizes external over embedded)
   const userWallet = activeWallet;
-  
-  // Use our custom hook to fetch real balances from selected network
-  const { 
-    balances, 
-    isLoading: isBalanceLoading, 
-    refetch: refreshBalances 
-  } = useTokenBalances(userWallet?.address, currentChainId);
+
+  // Use our custom hook to fetch real balances from Base mainnet
+  const {
+    balances,
+    isLoading: isBalanceLoading,
+    refetch: refreshBalances
+  } = useTokenBalances(userWallet?.address);
 
   // Show loading state while Privy initializes
   if (!ready) {
@@ -44,23 +44,17 @@ export default function WalletPage() {
 
   return (
     <div className="min-h-screen bg-gray-950">
-      <Navigation 
-        currentChainId={currentChainId}
-        onChainChange={(newChainId) => {
-          setCurrentChainId(newChainId);
-          setTimeout(() => refreshBalances(), 100);
-        }}
-      />
+      <Navigation />
       <Layout>
         <div className="space-y-6">
           {userWallet ? (
-            <div className="space-y-6" key={currentChainId}>
+            <div className="space-y-6">
               <WalletInfo
                 wallet={userWallet as unknown as Wallet}
                 balances={balances}
                 isLoading={isBalanceLoading}
                 onRefresh={refreshBalances}
-                chainId={currentChainId}
+                chainId={chainId}
               />
             </div>
           ) : (

@@ -21,7 +21,7 @@ interface RenewTarget {
 export default function IdentityPage() {
   const router = useRouter();
   const { ready, authenticated, user } = usePrivy();
-  const [chainId] = useState(8453);
+  const chainId = 8453;
   const [mintTarget, setMintTarget] = useState<MintTarget | null>(null);
   const [renewTarget, setRenewTarget] = useState<RenewTarget | null>(null);
   const { data: isAdmin } = useIsAdmin(chainId);
@@ -39,7 +39,7 @@ export default function IdentityPage() {
 
   return (
     <div className="min-h-screen bg-gray-950">
-      <Navigation currentChainId={chainId} />
+      <Navigation />
 
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-6">
         <div>

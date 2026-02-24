@@ -71,7 +71,7 @@ Each domain (faucet, swag) has:
 ## Contract Architecture
 
 ### FaucetManager
-- Multi-vault ETH faucet with optional ZKPassport + token gating
+- Multi-vault ETH faucet with optional token gating
 - Vault CRUD: `createVault`, `updateVault`, `updateVaultGating`
 - User flow: `claim`, `returnFunds`
 

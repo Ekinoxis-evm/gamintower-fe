@@ -2,9 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import { usePrivy, useWallets } from '@privy-io/react-auth';
-import { getChainRpc } from '../config/networks';
-import { logger } from '../utils/logger';
+import { usePrivy } from '@privy-io/react-auth';
 
 // Icons as simple SVG components for cleaner mobile menu
 const WalletIcon = () => (
@@ -33,56 +31,17 @@ const LogoutIcon = () => (
   </svg>
 );
 
-const SUPPORTED_CHAINS = [
-  { id: 8453, name: 'Base', logo: '/chains/base.jpeg' },
-  { id: 1, name: 'Ethereum', logo: '/chains/ethereum.png' },
-  { id: 10, name: 'Optimism', logo: '/chains/op mainnet.png' },
-  { id: 130, name: 'Unichain', logo: '/chains/unichain.png' },
-];
-
 interface NavigationProps {
   className?: string;
-  currentChainId?: number;
-  onChainChange?: (chainId: number) => void;
 }
 
 const Navigation: React.FC<NavigationProps> = ({
   className = '',
-  currentChainId = 8453,
-  onChainChange
 }) => {
   const router = useRouter();
   const { authenticated, logout } = usePrivy();
-  const { wallets } = useWallets();
-  const [displayChainId, setDisplayChainId] = useState(currentChainId);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isSwitching, setIsSwitching] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
-
-  // Sync displayChainId with prop
-  useEffect(() => {
-    setDisplayChainId(currentChainId);
-  }, [currentChainId]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Close mobile menu on route change
-  useEffect(() => {
-    setIsMobileMenuOpen(false);
-  }, [router.pathname]);
-
-  const userWallet = wallets?.[0];
 
   const mainNavItems = [
     { href: '/wallet', label: 'Wallet', icon: WalletIcon },
@@ -90,6 +49,11 @@ const Navigation: React.FC<NavigationProps> = ({
     { href: '/challenges', label: 'Challenges', icon: ChallengesIcon },
     { href: '/courses', label: 'Courses', icon: CoursesIcon },
   ];
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [router.pathname]);
 
   // Lock body scroll and signal mobile menu state when open
   useEffect(() => {
@@ -111,138 +75,6 @@ const Navigation: React.FC<NavigationProps> = ({
   }, []);
 
   const isActive = (href: string) => router.pathname === href || router.pathname.startsWith(href + '/');
-  const currentChain = SUPPORTED_CHAINS.find(c => c.id === displayChainId) || SUPPORTED_CHAINS[0];
-
-  // Chain configurations for adding new chains (uses centralized RPC config)
-  const CHAIN_CONFIGS: Record<number, any> = {
-    8453: {
-      chainId: '0x2105',
-      chainName: 'Base',
-      nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
-      rpcUrls: [getChainRpc(8453)],
-      blockExplorerUrls: ['https://basescan.org'],
-    },
-    1: {
-      chainId: '0x1',
-      chainName: 'Ethereum',
-      nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
-      rpcUrls: [getChainRpc(1)],
-      blockExplorerUrls: ['https://etherscan.io'],
-    },
-    10: {
-      chainId: '0xa',
-      chainName: 'Optimism',
-      nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
-      rpcUrls: [getChainRpc(10)],
-      blockExplorerUrls: ['https://optimistic.etherscan.io'],
-    },
-    130: {
-      chainId: '0x82',
-      chainName: 'Unichain',
-      nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
-      rpcUrls: [getChainRpc(130)],
-      blockExplorerUrls: ['https://unichain.blockscout.com'],
-    },
-  };
-
-  // Helper to check if error indicates chain needs to be added
-  const isChainNotFoundError = (error: any): boolean => {
-    if (!error) return false;
-    // Check common error codes
-    if (error.code === 4902 || error.code === -32603) return true;
-    // Check error message for common patterns
-    const message = (error.message || '').toLowerCase();
-    return (
-      message.includes('unsupported chainid') ||
-      message.includes('unrecognized chain') ||
-      message.includes('chain not found') ||
-      message.includes('unknown chain') ||
-      message.includes('not supported')
-    );
-  };
-
-  // Switch wallet chain
-  const handleChainSwitch = async (chainId: number) => {
-    if (!userWallet || isSwitching) return;
-    if (chainId === displayChainId) {
-      setIsDropdownOpen(false);
-      return;
-    }
-
-    setIsSwitching(true);
-    setIsDropdownOpen(false);
-
-    try {
-      const provider = await userWallet.getEthereumProvider();
-      const chainHex = `0x${chainId.toString(16)}`;
-      const chainConfig = CHAIN_CONFIGS[chainId];
-
-      // For less common chains like Unichain, try adding first
-      if (chainId === 130 && chainConfig) {
-        try {
-          await provider.request({
-            method: 'wallet_addEthereumChain',
-            params: [chainConfig],
-          });
-        } catch (addError: any) {
-          // Ignore if chain already exists (some wallets throw, some don't)
-          if (addError.code !== 4001) {
-            logger.debug('Chain add attempt', { message: addError.message });
-          }
-        }
-      }
-
-      try {
-        // Try to switch to the chain
-        await provider.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: chainHex }],
-        });
-      } catch (switchError: any) {
-        // If chain doesn't exist, try adding it
-        if (isChainNotFoundError(switchError)) {
-          if (chainConfig) {
-            await provider.request({
-              method: 'wallet_addEthereumChain',
-              params: [chainConfig],
-            });
-            // After adding, some wallets auto-switch, some don't - try switching again
-            try {
-              await provider.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: chainHex }],
-              });
-            } catch {
-              // Ignore - chain was added, user may need to switch manually
-            }
-          } else {
-            throw new Error(`Chain configuration not found for chainId ${chainId}`);
-          }
-        } else {
-          throw switchError;
-        }
-      }
-
-      // Update state after successful switch
-      setDisplayChainId(chainId);
-      onChainChange?.(chainId);
-
-    } catch (error: any) {
-      logger.error('Error switching chain', error);
-      // Only show alert for non-user-rejected errors
-      if (error.code !== 4001) {
-        const chainName = SUPPORTED_CHAINS.find(c => c.id === chainId)?.name || `Chain ${chainId}`;
-        // Provide more helpful message for Unichain
-        if (chainId === 130) {
-          alert(`Unable to switch to Unichain. Your wallet may not support this network yet. Try adding it manually in your wallet settings with RPC: https://rpc.unichain.org`);
-        } else {
-          alert(`Failed to switch to ${chainName}: ${error.message || 'Unknown error'}`);
-        }
-      }
-    } finally {
-      setIsSwitching(false);
-    }
-  };
 
   if (!authenticated) return null;
 
@@ -282,62 +114,13 @@ const Navigation: React.FC<NavigationProps> = ({
             ))}
           </div>
 
-          {/* Right Side: Chain + Actions */}
+          {/* Right Side: Chain Badge + Actions */}
           <div className="flex items-center gap-2">
 
-            {/* Chain Switcher Dropdown */}
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                disabled={isSwitching}
-                className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 bg-gray-900 border rounded-lg text-xs font-mono transition-all duration-200 ${
-                  isSwitching
-                    ? 'border-yellow-500/50 text-yellow-400'
-                    : isDropdownOpen
-                    ? 'border-cyan-500 text-cyan-400'
-                    : 'border-gray-700 text-gray-300 hover:border-cyan-500/50'
-                }`}
-              >
-                <div className="w-5 h-5 flex items-center justify-center">
-                  {isSwitching ? (
-                    <div className="w-4 h-4 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Image src={currentChain.logo} alt={currentChain.name} width={20} height={20} className="w-5 h-5 rounded-full object-contain" unoptimized />
-                  )}
-                </div>
-                <span className="hidden sm:inline">{isSwitching ? 'Switching...' : currentChain.name}</span>
-                <span className={`text-gray-500 transition-transform duration-200 text-[10px] ${isDropdownOpen ? 'rotate-180' : ''}`}>▼</span>
-              </button>
-
-              {/* Dropdown Menu */}
-              <div
-                className={`absolute right-0 top-full mt-1 bg-gray-900 border border-gray-700 rounded-lg shadow-xl z-50 min-w-[160px] overflow-hidden transition-all duration-200 origin-top ${
-                  isDropdownOpen
-                    ? 'opacity-100 scale-100 translate-y-0'
-                    : 'opacity-0 scale-95 -translate-y-1 pointer-events-none'
-                }`}
-              >
-                {SUPPORTED_CHAINS.map((chain) => (
-                  <button
-                    key={chain.id}
-                    onClick={() => handleChainSwitch(chain.id)}
-                    disabled={isSwitching}
-                    className={`w-full px-3 py-2.5 text-left text-xs font-mono flex items-center gap-2 transition-all duration-150 ${
-                      displayChainId === chain.id
-                        ? 'text-cyan-400 bg-cyan-500/10'
-                        : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                    } ${isSwitching ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
-                      <Image src={chain.logo} alt={chain.name} width={20} height={20} className="w-5 h-5 rounded-full object-contain" unoptimized />
-                    </div>
-                    <span className="flex-1">{chain.name}</span>
-                    {displayChainId === chain.id && (
-                      <span className="text-cyan-400">✓</span>
-                    )}
-                  </button>
-                ))}
-              </div>
+            {/* Static Base Badge */}
+            <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 bg-gray-900 border border-gray-700 rounded-lg text-xs font-mono text-gray-300">
+              <Image src="/chains/base.jpeg" alt="Base" width={20} height={20} className="w-5 h-5 rounded-full" unoptimized />
+              <span className="hidden sm:inline">Base</span>
             </div>
 
             {/* Logout - Desktop */}
@@ -392,20 +175,15 @@ const Navigation: React.FC<NavigationProps> = ({
           <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-slate-800/80 bg-slate-900/50">
             <div className="flex items-center gap-3">
               <Image
-                src={currentChain.logo}
-                alt={currentChain.name}
+                src="/chains/base.jpeg"
+                alt="Base"
                 width={28}
                 height={28}
                 className="w-7 h-7 rounded-full ring-2 ring-slate-700"
                 unoptimized
               />
               <div className="min-w-0">
-                <p className="text-xs text-white font-medium">{currentChain.name}</p>
-                {userWallet && (
-                  <p className="text-[10px] text-slate-500 font-mono truncate">
-                    {userWallet.address.slice(0, 6)}...{userWallet.address.slice(-4)}
-                  </p>
-                )}
+                <p className="text-xs text-white font-medium">Base</p>
               </div>
             </div>
             <button

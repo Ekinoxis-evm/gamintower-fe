@@ -13,7 +13,7 @@ type AdminTab = 'identity' | 'challenges' | 'courses';
 export default function AdminPage() {
   const router = useRouter();
   const { ready, authenticated } = usePrivy();
-  const [chainId] = useState(8453);
+  const chainId = 8453;
   const [activeTab, setActiveTab] = useState<AdminTab>('identity');
   const { data: isAdmin, isLoading: isAdminLoading } = useIsAdmin(chainId);
 
@@ -30,7 +30,7 @@ export default function AdminPage() {
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-gray-950">
-        <Navigation currentChainId={chainId} />
+        <Navigation />
         <main className="max-w-lg mx-auto px-4 py-16 text-center">
           <div className="bg-slate-900 border border-red-500/30 rounded-2xl p-8">
             <h1 className="text-xl font-bold text-red-400 mb-2">Access Denied</h1>
@@ -49,7 +49,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-950">
-      <Navigation currentChainId={chainId} />
+      <Navigation />
 
       <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-6">

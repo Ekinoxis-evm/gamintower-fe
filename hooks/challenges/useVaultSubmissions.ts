@@ -1,13 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { createPublicClient, http, type Abi } from 'viem';
-import { base, baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 import { getChainRpc } from '../../config/networks';
 import ChallengeVault_ABI from '../../frontend/deployments/abi/ChallengeVault.json';
-
-const getViemChain = (chainId: number) => {
-  if (chainId === 84532) return baseSepolia;
-  return base;
-};
 
 const VAULT_ABI = ChallengeVault_ABI as unknown as Abi;
 
@@ -31,7 +26,7 @@ export function useVaultSubmissions(
     queryKey: ['vault-submissions', vaultAddress, userAddress, chainId],
     queryFn: async (): Promise<VaultSubmissions> => {
       const client = createPublicClient({
-        chain: getViemChain(chainId),
+        chain: base,
         transport: http(getChainRpc(chainId)),
       });
 

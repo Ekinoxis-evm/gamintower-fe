@@ -18,7 +18,7 @@ import { logger } from './logger';
 // Re-export explorer function for backward compatibility
 export { getExplorerBaseUrl as getExplorerUrl };
 
-type ChainLabel = 'base' | 'ethereum' | 'unichain' | 'optimism';
+type ChainLabel = 'base' | 'ethereum';
 
 export type ChainConfig = {
   id: number;
@@ -31,8 +31,6 @@ export type ChainConfig = {
 const CHAIN_ID_TO_LABEL: Record<number, ChainLabel> = {
   [CHAIN_IDS.BASE]: 'base',
   [CHAIN_IDS.ETHEREUM]: 'ethereum',
-  [CHAIN_IDS.UNICHAIN]: 'unichain',
-  [CHAIN_IDS.OPTIMISM]: 'optimism',
 };
 
 function getLabelByChainId(chainId?: number): ChainLabel {
@@ -54,20 +52,6 @@ const CHAIN_CONFIGS: Record<ChainLabel, ChainConfig> = {
     name: 'Ethereum',
     usdc: TOKEN_ADDRESSES[CHAIN_IDS.ETHEREUM].USDC,
     explorerUrl: EXPLORER_URLS[CHAIN_IDS.ETHEREUM],
-  },
-  unichain: {
-    id: CHAIN_IDS.UNICHAIN,
-    label: 'unichain',
-    name: 'Unichain',
-    usdc: TOKEN_ADDRESSES[CHAIN_IDS.UNICHAIN].USDC,
-    explorerUrl: EXPLORER_URLS[CHAIN_IDS.UNICHAIN],
-  },
-  optimism: {
-    id: CHAIN_IDS.OPTIMISM,
-    label: 'optimism',
-    name: 'Optimism',
-    usdc: TOKEN_ADDRESSES[CHAIN_IDS.OPTIMISM].USDC,
-    explorerUrl: EXPLORER_URLS[CHAIN_IDS.OPTIMISM],
   },
 };
 

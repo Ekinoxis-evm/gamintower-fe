@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { createPublicClient, http, encodeFunctionData, type Abi } from 'viem';
-import { base, baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 import { useSendTransaction } from '@privy-io/react-auth';
 import { getFactoryAddresses } from '../../config/contracts';
 import { getChainRpc } from '../../config/networks';
@@ -19,11 +19,6 @@ const ERC20_BALANCE_ABI = [
 ] as const;
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
-
-const getViemChain = (chainId: number) => {
-  if (chainId === 84532) return baseSepolia;
-  return base;
-};
 
 const ERC20_ABI = [
   {
@@ -53,7 +48,7 @@ async function checkIdentityEligibility(
   userAddress: `0x${string}`,
 ): Promise<string | null> {
   const client = createPublicClient({
-    chain: getViemChain(chainId),
+    chain: base,
     transport: http(getChainRpc(chainId)),
   });
 
@@ -114,7 +109,7 @@ export function useJoinChallenge() {
     const addresses = getFactoryAddresses(chainId);
 
     const client = createPublicClient({
-      chain: getViemChain(chainId),
+      chain: base,
       transport: http(getChainRpc(chainId)),
     });
 

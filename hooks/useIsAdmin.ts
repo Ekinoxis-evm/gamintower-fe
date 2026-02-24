@@ -1,14 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { createPublicClient, http } from 'viem';
-import { base, baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 import { getChainRpc } from '../config/networks';
 import { getFactoryAddresses } from '../config/contracts';
 import { useActiveWallet } from './useActiveWallet';
-
-const getViemChain = (chainId: number) => {
-  if (chainId === 84532) return baseSepolia;
-  return base;
-};
 
 const OWNER_ABI = [
   {
@@ -34,7 +29,7 @@ export function useIsAdmin(chainId: number = 8453) {
 
       const factoryAddresses = getFactoryAddresses(chainId);
       const client = createPublicClient({
-        chain: getViemChain(chainId),
+        chain: base,
         transport: http(getChainRpc(chainId)),
       });
 

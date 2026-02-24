@@ -1,17 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { createPublicClient, http } from 'viem';
 import type { Abi } from 'viem';
-import { base, baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 import { getChainRpc } from '../../config/networks';
 import { VaultInfo, ChallengeState } from '../../types/index';
 import ChallengeVault_JSON from '../../frontend/deployments/abi/ChallengeVault.json';
 
 const ChallengeVault_ABI = ChallengeVault_JSON as unknown as Abi;
-
-const getViemChain = (chainId: number) => {
-  if (chainId === 84532) return baseSepolia;
-  return base;
-};
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`;
 
@@ -25,7 +20,7 @@ export function useVaultDetails(
       if (vaultAddresses.length === 0) return [];
 
       const client = createPublicClient({
-        chain: getViemChain(chainId),
+        chain: base,
         transport: http(getChainRpc(chainId)),
       });
 

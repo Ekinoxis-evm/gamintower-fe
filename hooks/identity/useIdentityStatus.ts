@@ -1,17 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { createPublicClient, http } from 'viem';
 import type { Abi } from 'viem';
-import { base, baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 import { getChainRpc } from '../../config/networks';
 import { IdentityStatus } from '../../types/index';
 import IdentityNFT_JSON from '../../frontend/deployments/abi/IdentityNFT.json';
 
 const IdentityNFT_ABI = IdentityNFT_JSON as unknown as Abi;
-
-const getViemChain = (chainId: number) => {
-  if (chainId === 84532) return baseSepolia;
-  return base;
-};
 
 const STATUS_MAP: Record<number, 'Active' | 'Expired' | 'Suspended'> = {
   0: 'Active',
@@ -37,7 +32,7 @@ export function useIdentityStatus(
       if (!userAddress || !collectionAddress) return DEFAULT_STATUS;
 
       const client = createPublicClient({
-        chain: getViemChain(chainId),
+        chain: base,
         transport: http(getChainRpc(chainId)),
       });
 

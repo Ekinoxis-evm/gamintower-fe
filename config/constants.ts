@@ -9,8 +9,6 @@
 export const CHAIN_IDS = {
   BASE: 8453,
   ETHEREUM: 1,
-  OPTIMISM: 10,
-  UNICHAIN: 130,
   BASE_SEPOLIA: 84532,
 } as const;
 
@@ -24,8 +22,6 @@ export const DEFAULT_CHAIN_ID = Number(process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID)
 export const EXPLORER_URLS: Record<ChainId, string> = {
   [CHAIN_IDS.BASE]: 'https://basescan.org',
   [CHAIN_IDS.ETHEREUM]: 'https://etherscan.io',
-  [CHAIN_IDS.OPTIMISM]: 'https://optimistic.etherscan.io',
-  [CHAIN_IDS.UNICHAIN]: 'https://unichain.blockscout.com',
   [CHAIN_IDS.BASE_SEPOLIA]: 'https://base-sepolia.blockscout.com',
 } as const;
 
@@ -35,24 +31,18 @@ export const EXPLORER_URLS: Record<ChainId, string> = {
 export const NETWORK_NAMES: Record<ChainId, string> = {
   [CHAIN_IDS.BASE]: 'Base',
   [CHAIN_IDS.ETHEREUM]: 'Ethereum',
-  [CHAIN_IDS.OPTIMISM]: 'Optimism',
-  [CHAIN_IDS.UNICHAIN]: 'Unichain',
   [CHAIN_IDS.BASE_SEPOLIA]: 'Base Sepolia',
 } as const;
 
 export const NETWORK_SHORT_NAMES: Record<ChainId, string> = {
   [CHAIN_IDS.BASE]: 'Base',
   [CHAIN_IDS.ETHEREUM]: 'ETH',
-  [CHAIN_IDS.OPTIMISM]: 'OP',
-  [CHAIN_IDS.UNICHAIN]: 'UNI',
   [CHAIN_IDS.BASE_SEPOLIA]: 'BSep',
 } as const;
 
 export const NETWORK_COLORS: Record<ChainId, string> = {
   [CHAIN_IDS.BASE]: '#0052FF',
   [CHAIN_IDS.ETHEREUM]: '#627EEA',
-  [CHAIN_IDS.OPTIMISM]: '#FF0B51',
-  [CHAIN_IDS.UNICHAIN]: '#00FF00',
   [CHAIN_IDS.BASE_SEPOLIA]: '#0052FF',
 } as const;
 
@@ -62,8 +52,6 @@ export const NETWORK_COLORS: Record<ChainId, string> = {
 export const DEFAULT_RPC_URLS: Record<ChainId, string> = {
   [CHAIN_IDS.BASE]: 'https://mainnet.base.org',
   [CHAIN_IDS.ETHEREUM]: 'https://eth.llamarpc.com',
-  [CHAIN_IDS.OPTIMISM]: 'https://mainnet.optimism.io',
-  [CHAIN_IDS.UNICHAIN]: 'https://rpc.unichain.org',
   [CHAIN_IDS.BASE_SEPOLIA]: 'https://sepolia.base.org',
 } as const;
 
@@ -76,10 +64,6 @@ export function getRpcUrl(chainId: ChainId): string {
       return process.env.NEXT_PUBLIC_MAINNET_RPC_URL || DEFAULT_RPC_URLS[CHAIN_IDS.ETHEREUM];
     case CHAIN_IDS.BASE:
       return process.env.NEXT_PUBLIC_BASE_RPC_URL || DEFAULT_RPC_URLS[CHAIN_IDS.BASE];
-    case CHAIN_IDS.OPTIMISM:
-      return process.env.NEXT_PUBLIC_OPTIMISM_RPC_URL || DEFAULT_RPC_URLS[CHAIN_IDS.OPTIMISM];
-    case CHAIN_IDS.UNICHAIN:
-      return process.env.NEXT_PUBLIC_UNICHAIN_RPC_URL || DEFAULT_RPC_URLS[CHAIN_IDS.UNICHAIN];
     case CHAIN_IDS.BASE_SEPOLIA:
       return process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || DEFAULT_RPC_URLS[CHAIN_IDS.BASE_SEPOLIA];
     default:
@@ -126,16 +110,6 @@ export const TOKEN_ADDRESSES: Record<ChainId, {
     USDT: process.env.NEXT_PUBLIC_USDT_ETHEREUM || '0xdAC17F958D2ee523a2206206994597C13D831ec7',
     EURC: process.env.NEXT_PUBLIC_EURC_ETHEREUM || '0x1aBaEA1f7C830bD89Acc67eC4af516284b1bC33c',
   },
-  [CHAIN_IDS.OPTIMISM]: {
-    USDC: process.env.NEXT_PUBLIC_USDC_OPTIMISM || '0x7F5c764cBc14f9669B88837ca1490cCa17c31607',
-    USDT: process.env.NEXT_PUBLIC_USDT_OPTIMISM || '0x94b008aA00579c1307B0EF2c499aD98a8ce58e58',
-    EURC: '', // Not available on Optimism
-  },
-  [CHAIN_IDS.UNICHAIN]: {
-    USDC: process.env.NEXT_PUBLIC_USDC_UNICHAIN || '0x078D782b760474a361dDA0AF3839290b0EF57AD6',
-    USDT: '', // Not available on Unichain
-    EURC: '', // Not available on Unichain
-  },
   [CHAIN_IDS.BASE_SEPOLIA]: {
     USDC: '',
     USDT: '',
@@ -153,9 +127,6 @@ export const ONEUP_TOKEN_ADDRESS = '0xF6813C71e620c654Ff6049a485E38D9494eFABdf' 
 // =============================================================================
 export const SUPPORTED_CHAIN_IDS: ChainId[] = [
   CHAIN_IDS.BASE,
-  CHAIN_IDS.ETHEREUM,
-  CHAIN_IDS.OPTIMISM,
-  CHAIN_IDS.UNICHAIN,
 ];
 
 export function isSupportedChain(chainId: number): chainId is ChainId {

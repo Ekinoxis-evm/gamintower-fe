@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { createPublicClient, http, encodeFunctionData, decodeEventLog, type Abi } from 'viem';
-import { base, baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 import { useSendTransaction } from '@privy-io/react-auth';
 import { getFactoryAddresses } from '../../config/contracts';
 import { getChainRpc } from '../../config/networks';
@@ -9,11 +9,6 @@ import ChallengeVault_ABI from '../../frontend/deployments/abi/ChallengeVault.js
 import IdentityNFT_ABI from '../../frontend/deployments/abi/IdentityNFT.json';
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
-
-const getViemChain = (chainId: number) => {
-  if (chainId === 84532) return baseSepolia;
-  return base;
-};
 
 const CONTRACT_ERROR_MESSAGES: Record<string, string> = {
   TokenNotAccepted: 'The selected token is not accepted.',
@@ -69,7 +64,7 @@ async function checkIdentityEligibility(
   userAddress: `0x${string}`,
 ): Promise<string | null> {
   const client = createPublicClient({
-    chain: getViemChain(chainId),
+    chain: base,
     transport: http(getChainRpc(chainId)),
   });
 
@@ -141,7 +136,7 @@ export function useCreateChallenge() {
     const addresses = getFactoryAddresses(chainId);
 
     const client = createPublicClient({
-      chain: getViemChain(chainId),
+      chain: base,
       transport: http(getChainRpc(chainId)),
     });
 
