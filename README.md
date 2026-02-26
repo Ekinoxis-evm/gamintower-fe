@@ -1,6 +1,6 @@
-# ETH Cali Wallet
+# 1UP Gaming Tower
 
-A secure and easy-to-use Ethereum wallet application built with Next.js and Privy for authentication. This wallet allows users to access web3 easily with **native gas sponsorship by Privy**, supporting multiple tokens across Base, Ethereum, Optimism, and Unichain networks.
+A secure and easy-to-use Web3 gaming platform built by [Ekinoxis](https://ekinoxis.xyz) with support and guidance from [ETH Cali](https://ethcali.org). Built with Next.js and Privy for authentication, with **native gas sponsorship by Privy**, supporting multiple tokens across Base, Ethereum, Optimism, and Unichain networks.
 
 ## 🌟 Features
 
@@ -168,6 +168,7 @@ eth-cali-wallet/
 | Token | Contract Address | Decimals | Network |
 |-------|------------------|----------|---------|
 | **ETH** | Native | 18 | Base, Ethereum, Optimism, Unichain |
+| **1UP** | `0xF6813C71e620c654Ff6049a485E38D9494eFABdf` | 18 | Base |
 | **USDC** | `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` | 6 | Base |
 | **USDC** | `0x7F5c764cBc14f9669B88837ca1490cCa17c31607` | 6 | Optimism |
 | **USDC** | `0x078D782b760474a361dDA0AF3839290b0EF57AD6` | 6 | Unichain |
@@ -335,10 +336,10 @@ ISC License - see the [LICENSE](LICENSE) file for details.
 - **Live Demo**: [https://wallet.ethcali.org](https://wallet.ethcali.org)
 - **ETH CALI**: [Learn more about ETH CALI](https://ethcali.org)
 
-## 💡 About ETH CALI
+## 💡 About
 
-This wallet is proudly sponsored by ETH CALI, making web3 accessible to everyone through gas-free transactions and easy-to-use interfaces.
+1UP Gaming Tower is built by [Ekinoxis](https://ekinoxis.xyz), with support and guidance from [ETH Cali](https://ethcali.org) — making web3 accessible to everyone through gas-free transactions and easy-to-use interfaces.
 
 ---
 
-**Built with ❤️ by the ETH CALI community** 
+**Built by [Ekinoxis](https://ekinoxis.xyz)** — with support and guidance from [ETH Cali](https://ethcali.org)
