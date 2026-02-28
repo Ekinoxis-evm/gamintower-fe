@@ -55,7 +55,7 @@ const SubmitNumberModal: React.FC<SubmitNumberModalProps> = ({
         </div>
 
         <p className="text-xs text-gray-500 mb-4">
-          Submit your number after the challenge end time. The player closest to the target wins.
+          Submit your number after the match end time. The player closest to the target wins.
         </p>
 
         <div className="mb-4">

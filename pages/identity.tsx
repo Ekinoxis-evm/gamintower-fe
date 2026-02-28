@@ -43,9 +43,9 @@ export default function IdentityPage() {
 
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Identity</h1>
+          <h1 className="text-2xl font-bold text-white">Game Pass</h1>
           <p className="text-gray-400 text-sm mt-1">
-            Manage your on-chain identity NFT. A valid identity is required to participate in challenges.
+            Manage your on-chain identity NFT. A valid Game Pass is required to participate in Versus.
           </p>
         </div>
 
@@ -58,7 +58,7 @@ export default function IdentityPage() {
           />
         ) : (
           <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 text-center">
-            <p className="text-gray-400">Connect your wallet to view identity status.</p>
+            <p className="text-gray-400">Connect your wallet to view your Game Pass status.</p>
           </div>
         )}
 

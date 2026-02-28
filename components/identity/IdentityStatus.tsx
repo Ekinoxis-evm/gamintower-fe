@@ -309,7 +309,7 @@ function StatusCard({
                   )}
                   <Image
                     src={avatarSrc}
-                    alt={metadata?.name ?? 'Identity'}
+                    alt={metadata?.name ?? 'Game Pass'}
                     fill
                     className="object-cover"
                     unoptimized
@@ -337,7 +337,7 @@ function StatusCard({
               )
             ) : (
               <p className="text-white font-semibold text-[15px] leading-tight truncate">
-                {info?.name || 'Identity Collection'}
+                {info?.name || 'Game Pass Collection'}
               </p>
             )}
 
@@ -445,7 +445,7 @@ function StatusCard({
         {/* Stats chip */}
         {info && info.totalSupply > BigInt(0) && (
           <p className="text-[10px] text-slate-600">
-            {info.totalSupply.toString()} {info.totalSupply === BigInt(1) ? 'identity' : 'identities'} issued
+            {info.totalSupply.toString()} {info.totalSupply === BigInt(1) ? 'pass' : 'passes'} issued
           </p>
         )}
       </div>
@@ -458,7 +458,7 @@ function StatusCard({
               onClick={() => onMintClick(collectionAddress)}
               className="w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 active:bg-cyan-600 text-slate-950 text-sm font-bold transition-colors"
             >
-              Get Identity Card
+              Get Game Pass
             </button>
           )}
           {(currentStatus === 'Active' || currentStatus === 'Expired') && (
@@ -495,7 +495,7 @@ const IdentityStatusComponent: React.FC<IdentityStatusProps> = (props) => {
   if (collections.length === 0) {
     return (
       <div className="bg-slate-900 border border-slate-700/60 rounded-2xl p-6 text-center space-y-1">
-        <p className="text-slate-400 text-sm">No identity collections deployed yet.</p>
+        <p className="text-slate-400 text-sm">No Game Pass collections deployed yet.</p>
         <p className="text-slate-600 text-xs">An admin can deploy a collection from the admin panel.</p>
       </div>
     );

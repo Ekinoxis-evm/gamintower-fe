@@ -30,9 +30,9 @@ export default function ChallengesPage() {
 
       <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Challenges</h1>
+          <h1 className="text-2xl font-bold text-white">Versus</h1>
           <p className="text-gray-400 text-sm mt-1">
-            2-player staking number game. A valid identity NFT is required to create or join a challenge.
+            2-player staking number game. A valid Game Pass is required to create or join a match.
           </p>
         </div>
 

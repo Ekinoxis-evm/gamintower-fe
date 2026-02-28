@@ -28,7 +28,7 @@ const ChallengeAdminPanel: React.FC<ChallengeAdminPanelProps> = ({ chainId }) =>
 
   return (
     <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6">
-      <h2 className="text-lg font-bold text-white mb-4">Challenge Admin</h2>
+      <h2 className="text-lg font-bold text-white mb-4">Versus Admin</h2>
 
       <div className="space-y-4">
         <div>

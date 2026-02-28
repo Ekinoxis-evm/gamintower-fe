@@ -120,7 +120,7 @@ const IdentityAdminPanel: React.FC<IdentityAdminPanelProps> = ({ chainId }) => {
 
   return (
     <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6">
-      <h2 className="text-lg font-bold text-white mb-4">Identity Admin</h2>
+      <h2 className="text-lg font-bold text-white mb-4">Game Pass Admin</h2>
 
       <div className="flex gap-2 mb-5">
         {(['deploy', 'config'] as const).map((s) => (

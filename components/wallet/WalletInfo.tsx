@@ -1,19 +1,17 @@
 import Image from 'next/image';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Wallet, TokenBalance } from '../../types/index';
 import Loading from '../../components/shared/Loading';
 import { getTokenLogoUrl, formatTokenBalance } from '../../utils/tokenUtils';
-import { usePrivy, useWallets, useSendTransaction, useFundWallet } from '@privy-io/react-auth';
+import { usePrivy, useWallets, useSendTransaction } from '@privy-io/react-auth';
 import SendTokenModal from './SendTokenModal';
 import QRScanner from './QRScanner';
 import { parseUnits, encodeFunctionData } from 'viem';
-import { base, mainnet, optimism } from 'viem/chains';
 import { useTokenPrices } from '../../hooks/useTokenPrices';
 import { getTokenAddresses } from '../../utils/network';
 import { ONEUP_TOKEN_ADDRESS } from '../../config/constants';
 import ReceiveModal from './ReceiveModal';
-import { useUserNFTs } from '../../hooks/useUserNFTs';
-import { NFTCard } from './NFTCard';
+import Buy1UPModal from './Buy1UPModal';
 import { logger } from '../../utils/logger';
 import ENSSection from '../ens/ENSSection';
 import SwapModal from './SwapModal';
@@ -36,7 +34,6 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
   const { exportWallet, user } = usePrivy();
   const { wallets } = useWallets();
   const { sendTransaction } = useSendTransaction();
-  const { fundWallet } = useFundWallet();
   const { getPriceForToken } = useTokenPrices();
   const activeWallet = wallets?.[0];
 
@@ -46,9 +43,6 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
   const [isSendingTx, setIsSendingTx] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
 
-  // Tab state for Tokens/Collectibles
-  const [activeTab, setActiveTab] = useState<'tokens' | 'collectibles'>('tokens');
-
   // New state for QR scanner
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
   const [scannedAddress, setScannedAddress] = useState<string | null>(null);
@@ -56,22 +50,12 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
   // State for Receive modal
   const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
 
-  // Fund wallet state
-  const [isFunding, setIsFunding] = useState(false);
+  // Buy 1UP modal state
+  const [isBuy1UPModalOpen, setIsBuy1UPModalOpen] = useState(false);
 
   // Swap modal state
   const [isSwapModalOpen, setIsSwapModalOpen] = useState(false);
 
-  // NFTs for collectibles tab - pass chainId to ensure correct chain on refresh
-  const { data: nfts = [], isLoading: isLoadingNFTs, refetch: refetchNFTs } = useUserNFTs(chainId);
-
-  // Refetch NFTs when chainId changes
-  useEffect(() => {
-    if (activeTab === 'collectibles' && chainId) {
-      refetchNFTs();
-    }
-  }, [chainId, activeTab, refetchNFTs]);
-  
   // Get the actual wallet instance from Privy's useWallets hook
   const privyWallet = wallets?.find(w => w.address.toLowerCase() === wallet.address.toLowerCase());
   
@@ -129,32 +113,6 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
       await exportWallet({ address: wallet.address });
     } catch (error) {
       logger.error('Error exporting wallet', error);
-    }
-  };
-
-  // Get the viem chain object for current chainId
-  const getViemChain = () => {
-    switch (chainId) {
-      case 1: return mainnet;
-      case 10: return optimism;
-      default: return base;
-    }
-  };
-
-  // Handle fund wallet with Apple Pay / Google Pay
-  const handleFundWallet = async () => {
-    if (!wallet.address) return;
-
-    setIsFunding(true);
-    try {
-      // Privy fundWallet API - opens modal for Apple Pay / Google Pay
-      // Pass address and chain - asset and amount default to Dashboard settings
-      const viemChain = getViemChain();
-      await fundWallet({ address: wallet.address, options: { chain: viemChain } });
-    } catch (error) {
-      logger.error('Error funding wallet', error);
-    } finally {
-      setIsFunding(false);
     }
   };
 
@@ -346,8 +304,7 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
         <div className="quick-actions">
             <button
               className="quick-action-btn fund-btn"
-              onClick={handleFundWallet}
-              disabled={isFunding}
+              onClick={() => setIsBuy1UPModalOpen(true)}
             >
               <div className="action-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -355,7 +312,7 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
                   <line x1="2" y1="10" x2="22" y2="10" />
                 </svg>
               </div>
-              <span>{isFunding ? 'Loading...' : 'Buy'}</span>
+              <span>Buy</span>
             </button>
             <button
               className="quick-action-btn swap-btn"
@@ -495,46 +452,11 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
           <h4>Assets</h4>
         </div>
 
-        {/* Tabs for Tokens/Collectibles */}
-        <div className="wallet-tabs">
-          <button
-            className={`wallet-tab ${activeTab === 'tokens' ? 'active' : ''}`}
-            onClick={() => setActiveTab('tokens')}
-          >
-            Tokens
-          </button>
-          <button
-            className={`wallet-tab ${activeTab === 'collectibles' ? 'active' : ''}`}
-            onClick={() => setActiveTab('collectibles')}
-          >
-            Collectibles
-          </button>
-          {activeTab === 'collectibles' && (
-            <button
-              className="refresh-collectibles-btn"
-              onClick={() => refetchNFTs()}
-              disabled={isLoadingNFTs}
-              title="Refresh collectibles"
-            >
-              <svg 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2"
-                className={isLoadingNFTs ? 'spinning' : ''}
-              >
-                <path d="M23 4v6h-6M1 20v-6h6" />
-                <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
-              </svg>
-            </button>
-          )}
-        </div>
-
         {isLoading ? (
           <div className="loading-balances">
             <Loading size="small" text="Loading balances..." />
           </div>
-        ) : activeTab === 'tokens' ? (
+        ) : (
           <div className="token-list">
             {/* ETH Balance */}
             <div className="token-item">
@@ -613,42 +535,6 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
               </div>
             )}
           </div>
-        ) : (
-          /* Collectibles Tab */
-          <div className="collectibles-list">
-            {isLoadingNFTs ? (
-              <div className="collectibles-loading">
-                <Loading size="small" text="Loading collectibles..." />
-              </div>
-            ) : nfts.length === 0 ? (
-              <div className="collectibles-empty">
-                <div className="empty-icon">
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <circle cx="8.5" cy="8.5" r="1.5" />
-                    <path d="M21 15l-5-5L5 21" />
-                  </svg>
-                </div>
-                <h4>No Collectibles Yet</h4>
-                <p>Your NFTs and collectibles will appear here</p>
-              </div>
-            ) : (
-              <div>
-                <div className="collectibles-summary">
-                  <span className="summary-label">Total Collectibles:</span>
-                  <span className="summary-value">{nfts.length}</span>
-                </div>
-                <div className="nfts-grid">
-                  {nfts.map((nft) => (
-                    <NFTCard
-                      key={nft.tokenId.toString()}
-                      nft={nft}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
         )}
       </div>
       
@@ -723,6 +609,14 @@ const WalletInfo: React.FC<WalletInfoProps> = ({
             setIsSwapModalOpen(false);
             onRefresh();
           }}
+        />
+      )}
+
+      {/* Buy 1UP Modal */}
+      {isBuy1UPModalOpen && (
+        <Buy1UPModal
+          walletAddress={wallet.address}
+          onClose={() => setIsBuy1UPModalOpen(false)}
         />
       )}
 

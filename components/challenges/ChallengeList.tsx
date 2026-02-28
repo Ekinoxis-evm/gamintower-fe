@@ -40,7 +40,7 @@ const ChallengeList: React.FC<ChallengeListProps> = ({ userAddress, chainId }) =
     <div>
       {/* Header row */}
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-bold text-white">Challenges</h2>
+        <h2 className="text-lg font-bold text-white">Versus</h2>
         {userAddress && (
           <button
             onClick={() => setIsCreateOpen(true)}
@@ -96,7 +96,7 @@ const ChallengeList: React.FC<ChallengeListProps> = ({ userAddress, chainId }) =
       ) : filteredVaults.length === 0 ? (
         <div className="bg-slate-900 border border-slate-700 rounded-xl p-8 text-center">
           <p className="text-gray-400">
-            {searchQuery ? `No challenge found for "${searchQuery.slice(0, 10)}…"` : 'No challenges yet. Create the first one!'}
+            {searchQuery ? `No match found for "${searchQuery.slice(0, 10)}…"` : 'No matches yet. Create the first one!'}
           </p>
           {searchQuery && (
             <button
@@ -152,8 +152,8 @@ const ChallengeList: React.FC<ChallengeListProps> = ({ userAddress, chainId }) =
 
       {isScannerOpen && (
         <QRScanner
-          title="Scan Challenge QR"
-          description="Point your camera at a challenge QR code to find it"
+          title="Scan Match QR"
+          description="Point your camera at a match QR code to find it"
           validator={ethereumAddressValidator}
           onScan={handleScanResult}
           onClose={() => setIsScannerOpen(false)}

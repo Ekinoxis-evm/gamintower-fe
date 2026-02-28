@@ -62,7 +62,7 @@ const IdentityRenewModal: React.FC<IdentityRenewModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-md">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-white">Renew Identity</h2>
+          <h2 className="text-lg font-bold text-white">Renew Game Pass</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -135,7 +135,7 @@ const IdentityRenewModal: React.FC<IdentityRenewModalProps> = ({
               disabled={isRenewing || !selectedConfig}
               className="w-full py-3 bg-purple-500 hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all"
             >
-              {isRenewing ? 'Processing…' : 'Renew Identity'}
+              {isRenewing ? 'Processing…' : 'Renew Game Pass'}
             </button>
           </div>
         )}

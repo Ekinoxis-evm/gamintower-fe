@@ -208,7 +208,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({ vault, userAddress, chain
             </div>
             {showQR && (
               <div className="flex flex-col items-center gap-2 bg-slate-800 border border-slate-600 rounded-xl p-4">
-                <p className="text-xs text-gray-400 uppercase tracking-wider">Scan to join challenge</p>
+                <p className="text-xs text-gray-400 uppercase tracking-wider">Scan to join match</p>
                 <div className="bg-white p-3 rounded-lg">
                   <QRCodeSVG value={vault.address} size={160} />
                 </div>
@@ -309,7 +309,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({ vault, userAddress, chain
           <button
             onClick={() => onSubmit(vault)}
             disabled={!endTimePassed}
-            title={!endTimePassed ? 'Available once the challenge timer ends' : undefined}
+            title={!endTimePassed ? 'Available once the match timer ends' : undefined}
             className="px-3 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-xs font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {endTimePassed ? 'Submit Number' : 'Submit (timer running…)'}

@@ -78,7 +78,7 @@ const CreateChallengeModal: React.FC<CreateChallengeModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-md">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-white">Create Challenge</h2>
+          <h2 className="text-lg font-bold text-white">Create Match</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -143,7 +143,7 @@ const CreateChallengeModal: React.FC<CreateChallengeModalProps> = ({
             disabled={isCreating}
             className="w-full py-3 bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 text-black font-bold rounded-xl transition-all"
           >
-            {stepLabel || (isCreating ? 'Creating...' : 'Create Challenge')}
+            {stepLabel || (isCreating ? 'Creating...' : 'Create Match')}
           </button>
         </div>
       </div>

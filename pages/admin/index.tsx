@@ -42,8 +42,8 @@ export default function AdminPage() {
   }
 
   const tabs: { id: AdminTab; label: string }[] = [
-    { id: 'identity', label: 'Identity' },
-    { id: 'challenges', label: 'Challenges' },
+    { id: 'identity', label: 'Game Pass' },
+    { id: 'challenges', label: 'Versus' },
     { id: 'courses', label: 'Courses' },
   ];
 
@@ -55,7 +55,7 @@ export default function AdminPage() {
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
           <p className="text-gray-400 text-sm mt-1">
-            Manage identity collections, challenge vaults, and courses.
+            Manage Game Pass collections, versus vaults, and courses.
           </p>
         </div>
 

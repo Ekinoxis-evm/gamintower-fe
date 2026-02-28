@@ -45,8 +45,8 @@ const Navigation: React.FC<NavigationProps> = ({
 
   const mainNavItems = [
     { href: '/wallet', label: 'Wallet', icon: WalletIcon },
-    { href: '/identity', label: 'Identity', icon: IdentityIcon },
-    { href: '/challenges', label: 'Challenges', icon: ChallengesIcon },
+    { href: '/identity', label: 'Game Pass', icon: IdentityIcon },
+    { href: '/challenges', label: 'Versus', icon: ChallengesIcon },
     { href: '/courses', label: 'Courses', icon: CoursesIcon },
   ];
 
@@ -85,11 +85,11 @@ const Navigation: React.FC<NavigationProps> = ({
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
             <Image
-              src="/logotethcali.png"
-              alt="ETH CALI"
-              width={200}
-              height={96}
-              className="h-7 sm:h-8 w-auto"
+              src="/tokens/1up.png"
+              alt="1UP"
+              width={36}
+              height={36}
+              className="h-8 w-8"
               priority
               unoptimized
             />
@@ -116,12 +116,6 @@ const Navigation: React.FC<NavigationProps> = ({
 
           {/* Right Side: Chain Badge + Actions */}
           <div className="flex items-center gap-2">
-
-            {/* Static Base Badge */}
-            <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 bg-gray-900 border border-gray-700 rounded-lg text-xs font-mono text-gray-300">
-              <Image src="/chains/base.jpeg" alt="Base" width={20} height={20} className="w-5 h-5 rounded-full" unoptimized />
-              <span className="hidden sm:inline">Base</span>
-            </div>
 
             {/* Logout - Desktop */}
             <button
@@ -175,16 +169,13 @@ const Navigation: React.FC<NavigationProps> = ({
           <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-slate-800/80 bg-slate-900/50">
             <div className="flex items-center gap-3">
               <Image
-                src="/chains/base.jpeg"
-                alt="Base"
+                src="/tokens/1up.png"
+                alt="1UP"
                 width={28}
                 height={28}
-                className="w-7 h-7 rounded-full ring-2 ring-slate-700"
+                className="w-7 h-7 rounded-full"
                 unoptimized
               />
-              <div className="min-w-0">
-                <p className="text-xs text-white font-medium">Base</p>
-              </div>
             </div>
             <button
               onClick={closeMobileMenu}
