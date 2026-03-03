@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { formatUnits } from 'viem';
 import { useIdentityTokenConfigs } from '../../hooks/identity/useIdentityTokenConfigs';
 import { useIdentityRenew } from '../../hooks/identity/useIdentityRenew';
+import { useActiveWallet } from '../../hooks/useActiveWallet';
 import type { MintPeriod } from '../../hooks/identity/useIdentityMint';
 import { getTokenMetaByAddress } from '../../utils/tokenUtils';
 
@@ -27,6 +28,7 @@ const IdentityRenewModal: React.FC<IdentityRenewModalProps> = ({
 
   const { data: tokenConfigs = [], isLoading } = useIdentityTokenConfigs(collectionAddress, chainId);
   const { renew } = useIdentityRenew();
+  const { address } = useActiveWallet();
 
   const enabledConfigs = tokenConfigs.filter((c) => c.enabled);
   const selectedConfig = enabledConfigs[selectedTokenIdx];
@@ -37,13 +39,14 @@ const IdentityRenewModal: React.FC<IdentityRenewModalProps> = ({
     : BigInt(0);
 
   const handleRenew = async () => {
-    if (!selectedConfig) return;
+    if (!selectedConfig || !address) return;
     setIsRenewing(true);
     setError(null);
     try {
       await renew({
         collectionAddress,
         tokenAddress: selectedConfig.token,
+        userAddress: address as `0x${string}`,
         approvalAmount: price,
         tokenId,
         period,

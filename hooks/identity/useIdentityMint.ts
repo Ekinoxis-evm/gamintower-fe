@@ -1,9 +1,21 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { encodeFunctionData } from 'viem';
+import { createPublicClient, http, encodeFunctionData, maxUint256 } from 'viem';
+import { base } from 'viem/chains';
 import { useSendTransaction } from '@privy-io/react-auth';
+import { getRpcUrl, type ChainId } from '../../config/constants';
 import IdentityNFT_ABI from '../../frontend/deployments/abi/IdentityNFT.json';
 
 const ERC20_ABI = [
+  {
+    inputs: [
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' },
+    ],
+    name: 'allowance',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
   {
     inputs: [
       { name: 'spender', type: 'address' },
@@ -22,6 +34,7 @@ export type MintPeriod = 0 | 1;
 interface MintParams {
   collectionAddress: `0x${string}`;
   tokenAddress: `0x${string}`;
+  userAddress: `0x${string}`;
   approvalAmount: bigint;
   metadataURI: string;
   period: MintPeriod;
@@ -33,20 +46,36 @@ export function useIdentityMint() {
   const queryClient = useQueryClient();
 
   const mint = async (params: MintParams) => {
-    const { collectionAddress, tokenAddress, approvalAmount, metadataURI, period, chainId } = params;
+    const { collectionAddress, tokenAddress, userAddress, approvalAmount, metadataURI, period, chainId } = params;
 
-    // 1. Approve ERC20 spend
-    const approveData = encodeFunctionData({
-      abi: ERC20_ABI,
-      functionName: 'approve',
-      args: [collectionAddress, approvalAmount],
+    const client = createPublicClient({
+      chain: base,
+      transport: http(getRpcUrl(chainId as ChainId)),
     });
-    await sendTransaction(
-      { to: tokenAddress, data: approveData, chainId },
-      { sponsor: true },
-    );
 
-    // 2. Mint identity NFT
+    // Check existing allowance — skip approve if already sufficient.
+    // Approve maxUint256 when needed so future mint/renew ops for this
+    // token+collection pair skip this step entirely.
+    const currentAllowance = await client.readContract({
+      address: tokenAddress,
+      abi: ERC20_ABI,
+      functionName: 'allowance',
+      args: [userAddress, collectionAddress],
+    }) as bigint;
+
+    if (currentAllowance < approvalAmount) {
+      const approveData = encodeFunctionData({
+        abi: ERC20_ABI,
+        functionName: 'approve',
+        args: [collectionAddress, maxUint256],
+      });
+      await sendTransaction(
+        { to: tokenAddress, data: approveData, chainId },
+        { sponsor: true },
+      );
+    }
+
+    // Mint identity NFT
     const mintData = encodeFunctionData({
       abi: IdentityNFT_ABI,
       functionName: 'mint',

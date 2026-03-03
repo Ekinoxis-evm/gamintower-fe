@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { formatUnits } from 'viem';
 import { useIdentityTokenConfigs } from '../../hooks/identity/useIdentityTokenConfigs';
 import { useIdentityMint, type MintPeriod } from '../../hooks/identity/useIdentityMint';
+import { useActiveWallet } from '../../hooks/useActiveWallet';
 import { getTokenMetaByAddress } from '../../utils/tokenUtils';
 import IdentityMetadataForm from './IdentityMetadataForm';
 
@@ -54,6 +55,7 @@ const IdentityMintModal: React.FC<IdentityMintModalProps> = ({
 
   const { data: tokenConfigs = [], isLoading } = useIdentityTokenConfigs(collectionAddress, chainId);
   const { mint } = useIdentityMint();
+  const { address } = useActiveWallet();
 
   const enabledConfigs = tokenConfigs.filter((c) => c.enabled);
   const selectedConfig = enabledConfigs[selectedTokenIdx];
@@ -73,13 +75,14 @@ const IdentityMintModal: React.FC<IdentityMintModalProps> = ({
   };
 
   const handleMint = async () => {
-    if (!selectedConfig) return;
+    if (!selectedConfig || !address) return;
     setIsMinting(true);
     setError(null);
     try {
       await mint({
         collectionAddress,
         tokenAddress: selectedConfig.token,
+        userAddress: address as `0x${string}`,
         approvalAmount,
         metadataURI: metadataUri,
         period,

@@ -11,3 +11,5 @@ export { useCollectionInfo } from './useCollectionInfo';
 export type { CollectionInfo } from './useCollectionInfo';
 export { useIdentityMetadata } from './useIdentityMetadata';
 export type { NFTMetadata, NFTAttribute } from './useIdentityMetadata';
+export { useAllGamePassHolders } from './useAllGamePassHolders';
+export type { HolderInfo } from './useAllGamePassHolders';

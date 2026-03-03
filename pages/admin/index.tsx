@@ -6,9 +6,10 @@ import Navigation from '../../components/Navigation';
 import IdentityAdminPanel from '../../components/identity/IdentityAdminPanel';
 import ChallengeAdminPanel from '../../components/challenges/ChallengeAdminPanel';
 import CourseAdminPanel from '../../components/courses/CourseAdminPanel';
+import GamePassPlayersList from '../../components/identity/GamePassPlayersList';
 import { useIsAdmin } from '../../hooks/useIsAdmin';
 
-type AdminTab = 'identity' | 'challenges' | 'courses';
+type AdminTab = 'identity' | 'challenges' | 'courses' | 'players';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -45,6 +46,7 @@ export default function AdminPage() {
     { id: 'identity', label: 'Game Pass' },
     { id: 'challenges', label: 'Versus' },
     { id: 'courses', label: 'Courses' },
+    { id: 'players', label: 'Players' },
   ];
 
   return (
@@ -80,6 +82,7 @@ export default function AdminPage() {
         {activeTab === 'identity' && <IdentityAdminPanel chainId={chainId} />}
         {activeTab === 'challenges' && <ChallengeAdminPanel chainId={chainId} />}
         {activeTab === 'courses' && <CourseAdminPanel chainId={chainId} />}
+        {activeTab === 'players' && <GamePassPlayersList chainId={chainId} />}
       </main>
     </div>
   );
